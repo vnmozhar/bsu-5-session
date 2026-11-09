@@ -201,6 +201,24 @@
   font-size: 12px;
 }
 
+.schedule-group-control {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 12px 0 16px;
+}
+
+.schedule-group-control .section-kicker {
+  margin: 0;
+  color: #65736c;
+}
+
+.schedule-group-hint {
+  color: #65736c;
+  font-size: 11px;
+}
+
 .calendar-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(210px, 0.62fr);
@@ -1043,9 +1061,8 @@ button.calendar-day {
 }
 
 .subject-schedule-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  gap: 10px;
   color: #3a7152;
   font-size: 18px;
 }

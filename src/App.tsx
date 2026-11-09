@@ -18,6 +18,7 @@ import {
   Empty,
   Input,
   Row,
+  Segmented,
   Space,
   Tag,
   Typography,
@@ -35,11 +36,26 @@ import './App.css'
 
 const { Paragraph, Text, Title } = Typography
 const weekdayLabels = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
+type StudyGroup = 'ОБЩ' | 'СПС' | 'ХОЗ'
 
 interface CalendarEvent {
   date: string
   kind: string
   detail: string
+  group?: string
+}
+
+function isScheduleEventVisible(group: string | undefined, selectedGroup: StudyGroup) {
+  if (selectedGroup === 'ОБЩ') return true
+
+  const normalizedGroup = (group ?? '').trim().toLocaleUpperCase('ru')
+  if (!normalizedGroup || normalizedGroup.includes('ОБЩ')) return true
+
+  const groupAliases = selectedGroup === 'СПС'
+    ? ['СПС', 'СУДЕБНО-ПРОКУРОРСКО-СЛЕДСТВЕННАЯ ДЕЯТЕЛЬНОСТЬ']
+    : ['ХОЗ', 'ХОЗЯЙСТВЕННОЕ ПРАВО']
+
+  return groupAliases.some((alias) => normalizedGroup.includes(alias))
 }
 
 function parseScheduleDate(date: string) {
@@ -162,8 +178,46 @@ function CalendarGrid({
   )
 }
 
+function ScheduleGroupSelector({
+  selectedGroup,
+  onChange,
+}: {
+  selectedGroup: StudyGroup
+  onChange: (group: StudyGroup) => void
+}) {
+  return (
+    <div className="schedule-group-control">
+      <Text className="section-kicker">УЧЕБНАЯ ГРУППА</Text>
+      <Segmented
+        aria-label="Учебная группа"
+        options={[
+          { label: 'ОБЩ', value: 'ОБЩ' },
+          {
+            label: <span title="Судебно-прокурорско-следственная деятельность">СПС</span>,
+            value: 'СПС',
+          },
+          { label: <span title="Хозяйственное право">ХОЗ</span>, value: 'ХОЗ' },
+        ]}
+        value={selectedGroup}
+        onChange={(value) => onChange(value as StudyGroup)}
+      />
+      <Text className="schedule-group-hint">
+        {selectedGroup === 'ОБЩ'
+          ? 'Совместное расписание и информация для СПС и ХОЗ'
+          : selectedGroup === 'СПС'
+            ? 'Расписание СПС и общая информация'
+            : 'Расписание ХОЗ и общая информация'}
+      </Text>
+    </div>
+  )
+}
+
 function App() {
   const [query, setQuery] = useState('')
+  const [selectedGroup, setSelectedGroup] = useState<StudyGroup>(() => {
+    const savedGroup = window.localStorage.getItem('bsu-session-dashboard-group-v1')
+    return savedGroup === 'СПС' || savedGroup === 'ХОЗ' ? savedGroup : 'ОБЩ'
+  })
   const normalizedQuery = query.trim().toLocaleLowerCase('ru')
   const currentPath = window.location.pathname.replace(/\/+$/, '') || '/'
   const isSubjectPath = currentPath.startsWith('/subjects/')
@@ -172,14 +226,18 @@ function App() {
     (subject) => currentPath === `/subjects/${subject.id}`,
   )
   const hasOfficialSchedule = officialSchedule.length > 0
-  const calendarEvents = hasOfficialSchedule
+  const calendarEvents: readonly CalendarEvent[] = hasOfficialSchedule
     ? officialSchedule.map((event) => ({
         date: event.date,
         kind: event.kind,
         detail: `${event.time} · ${event.subject} · ${event.group} · ${event.location}`,
+        group: event.group,
       }))
     : preliminarySchedule
-  const sortedCalendarEvents = [...calendarEvents].sort((first, second) =>
+  const visibleCalendarEvents = calendarEvents.filter((event) =>
+    isScheduleEventVisible(event.group, selectedGroup),
+  )
+  const sortedCalendarEvents = [...visibleCalendarEvents].sort((first, second) =>
     first.date.localeCompare(second.date),
   )
   const upcomingEvents = sortedCalendarEvents
@@ -188,12 +246,28 @@ function App() {
   const [selectedDate, setSelectedDate] = useState(
     upcomingEvents[0]?.date ?? sortedCalendarEvents[0]?.date ?? '',
   )
-  const selectedEvents = calendarEvents.filter(
+  const handleGroupChange = (group: StudyGroup) => {
+    setSelectedGroup(group)
+    window.localStorage.setItem('bsu-session-dashboard-group-v1', group)
+    const groupEvents = calendarEvents
+      .filter((event) => isScheduleEventVisible(event.group, group))
+      .sort((first, second) => first.date.localeCompare(second.date))
+    const nextEvent = groupEvents.find((event) => event.date >= today) ?? groupEvents[0]
+    setSelectedDate(nextEvent?.date ?? '')
+  }
+  const selectedEvents = visibleCalendarEvents.filter(
     (event) => event.date === selectedDate,
   )
   const subjectSchedule = selectedSubject
-    ? officialSchedule.filter((event) => event.subjectId === selectedSubject.id)
+    ? officialSchedule.filter(
+        (event) =>
+          event.subjectId === selectedSubject.id &&
+          isScheduleEventVisible(event.group, selectedGroup),
+      )
     : []
+  const visibleOfficialSchedule = officialSchedule.filter((event) =>
+    isScheduleEventVisible(event.group, selectedGroup),
+  )
   const subjectCalendarEvents: CalendarEvent[] = subjectSchedule.map((event) => ({
     date: event.date,
     kind: event.kind,
@@ -202,8 +276,13 @@ function App() {
   const [selectedSubjectDate, setSelectedSubjectDate] = useState(
     subjectSchedule[0]?.date ?? '',
   )
-  const selectedSubjectEvents = subjectSchedule.filter(
+  const effectiveSubjectDate = subjectSchedule.some(
     (event) => event.date === selectedSubjectDate,
+  )
+    ? selectedSubjectDate
+    : subjectSchedule[0]?.date ?? ''
+  const selectedSubjectEvents = subjectSchedule.filter(
+    (event) => event.date === effectiveSubjectDate,
   )
   const examSubjects = publicSubjects.filter(
     (subject) => subject.assessment.type === 'Экзамен',
@@ -294,7 +373,7 @@ function App() {
                   <CalendarOutlined />
                 </span>
                 <div>
-                  <Text className="section-kicker">СЕССИЯ 5 · ОСЕНЬ 2026</Text>
+                  <Text className="section-kicker">4 КУРС · 7 СЕМЕСТР · ОСЕНЬ 2026</Text>
                   <Title id="schedule-title" level={2}>
                     Календарь сессии
                   </Title>
@@ -325,12 +404,16 @@ function App() {
               type={hasOfficialSchedule ? 'success' : 'warning'}
             />
             <Text className="session-range">
-              Сессия 5 (осень 2026): с {formatScheduleDate(sessionRange.start)} по{' '}
+              Физически 5-я сессия (4 курс, 7 семестр): с {formatScheduleDate(sessionRange.start)} по{' '}
               {formatScheduleDate(sessionRange.end)}
             </Text>
+            <ScheduleGroupSelector
+              onChange={handleGroupChange}
+              selectedGroup={selectedGroup}
+            />
             <div className="calendar-layout">
               <CalendarGrid
-                events={calendarEvents}
+                events={visibleCalendarEvents}
                 onSelectDate={setSelectedDate}
                 selectedDate={selectedDate}
               />
@@ -392,7 +475,7 @@ function App() {
             className="session-overview"
           >
             <div className="session-overview-heading">
-              <Text className="section-kicker">СЕССИЯ 5 · ОСЕНЬ 2026</Text>
+            <Text className="section-kicker">4 КУРС · 7 СЕМЕСТР · ОСЕНЬ 2026</Text>
               <Title id="session-overview-title" level={2}>
                 Что в сессии
               </Title>
@@ -705,17 +788,21 @@ function App() {
             <a className="back-link" href="/">
               <ArrowLeftOutlined /> Календарь сессии
             </a>
-            <Text className="section-kicker">СЕССИЯ 5 · ОСЕНЬ 2026</Text>
+              <Text className="section-kicker">4 КУРС · 7 СЕМЕСТР · ОСЕНЬ 2026</Text>
             <Title id="expanded-schedule-title" level={2}>
               Полное расписание
             </Title>
             <Text className="session-range">
-              Сессия 5 (осень 2026): с {formatScheduleDate(sessionRange.start)} по{' '}
+              Физически 5-я сессия (4 курс, 7 семестр): с {formatScheduleDate(sessionRange.start)} по{' '}
               {formatScheduleDate(sessionRange.end)}
             </Text>
+            <ScheduleGroupSelector
+              onChange={handleGroupChange}
+              selectedGroup={selectedGroup}
+            />
             <div className="calendar-layout expanded-calendar-layout">
               <CalendarGrid
-                events={calendarEvents}
+                events={visibleCalendarEvents}
                 onSelectDate={setSelectedDate}
                 selectedDate={selectedDate}
               />
@@ -738,7 +825,7 @@ function App() {
             </div>
             {hasOfficialSchedule ? (
               <div className="official-schedule-list">
-                {officialSchedule.map((event) => (
+                {visibleOfficialSchedule.map((event) => (
                   <article className="official-schedule-item" key={`${event.date}-${event.time}-${event.group}`}>
                     <div>
                       <Text className="schedule-date-value">
@@ -936,14 +1023,17 @@ function App() {
                               Занятия и аттестация
                             </Title>
                           </div>
-                          <CalendarOutlined />
                         </div>
+                        <ScheduleGroupSelector
+                          onChange={handleGroupChange}
+                          selectedGroup={selectedGroup}
+                        />
                         {subjectSchedule.length > 0 ? (
                           <div className="subject-calendar-layout">
                             <CalendarGrid
                               events={subjectCalendarEvents}
                               onSelectDate={setSelectedSubjectDate}
-                              selectedDate={selectedSubjectDate}
+                              selectedDate={effectiveSubjectDate}
                             />
                             <div className="subject-schedule-list">
                               {selectedSubjectEvents.map((event) => (
