@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
@@ -45,6 +45,17 @@ interface CalendarEvent {
   group?: string
 }
 
+interface TodayAgendaItem {
+  key: string
+  time: string
+  kind: string
+  subject: string
+  group: string
+  location: string
+  detail: string
+  status: string | null
+}
+
 function isScheduleEventVisible(group: string | undefined, selectedGroup: StudyGroup) {
   if (selectedGroup === 'ОБЩ') return true
 
@@ -56,6 +67,23 @@ function isScheduleEventVisible(group: string | undefined, selectedGroup: StudyG
     : ['ХОЗ', 'ХОЗЯЙСТВЕННОЕ ПРАВО']
 
   return groupAliases.some((alias) => normalizedGroup.includes(alias))
+}
+
+function getTimeValues(time: string) {
+  return Array.from(time.matchAll(/\b(\d{1,2})[:.](\d{2})\b/g), (match) =>
+    Number(match[1]) * 60 + Number(match[2]),
+  )
+}
+
+function getTodayEventStatus(time: string, currentMinutes: number) {
+  const [start, end] = getTimeValues(time)
+  if (start === undefined) return null
+  if (end !== undefined) {
+    if (currentMinutes < start) return 'Далее'
+    if (currentMinutes < end) return 'Сейчас идет'
+    return 'Завершено'
+  }
+  return currentMinutes < start ? 'Далее' : null
 }
 
 function parseScheduleDate(date: string) {
@@ -70,8 +98,6 @@ function toLocalISODate(date: Date) {
     String(date.getDate()).padStart(2, '0'),
   ].join('-')
 }
-
-const today = toLocalISODate(new Date())
 
 function formatScheduleDate(date: string) {
   return parseScheduleDate(date).toLocaleDateString('ru-RU', {
@@ -214,6 +240,17 @@ function ScheduleGroupSelector({
 
 function App() {
   const [query, setQuery] = useState('')
+  const [currentTime, setCurrentTime] = useState(() => new Date())
+  useEffect(() => {
+    const timerId = window.setInterval(() => setCurrentTime(new Date()), 60_000)
+    return () => window.clearInterval(timerId)
+  }, [])
+  const today = toLocalISODate(currentTime)
+  const todayLabel = currentTime.toLocaleDateString('ru-RU', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  })
   const [selectedGroup, setSelectedGroup] = useState<StudyGroup>(() => {
     const savedGroup = window.localStorage.getItem('bsu-session-dashboard-group-v1')
     return savedGroup === 'СПС' || savedGroup === 'ХОЗ' ? savedGroup : 'ОБЩ'
@@ -268,6 +305,41 @@ function App() {
   const visibleOfficialSchedule = officialSchedule.filter((event) =>
     isScheduleEventVisible(event.group, selectedGroup),
   )
+  const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes()
+  const todayOfficialEvents = visibleOfficialSchedule
+    .filter((event) => event.date === today)
+    .sort((first, second) => {
+      const firstTime = getTimeValues(first.time)[0] ?? Number.MAX_SAFE_INTEGER
+      const secondTime = getTimeValues(second.time)[0] ?? Number.MAX_SAFE_INTEGER
+      return firstTime - secondTime
+    })
+  const todayPreliminaryEvents = hasOfficialSchedule
+    ? []
+    : visibleCalendarEvents.filter((event) => event.date === today)
+  const todayAgendaItems: TodayAgendaItem[] = hasOfficialSchedule
+    ? todayOfficialEvents.map((event) => ({
+        key: `${event.date}-${event.time}-${event.subject}-${event.group}`,
+        time: event.time,
+        kind: event.kind,
+        subject: event.subject,
+        group: event.group,
+        location: event.location,
+        detail: '',
+        status: getTodayEventStatus(event.time, currentMinutes),
+      }))
+    : todayPreliminaryEvents.map((event) => ({
+        key: `${event.date}-${event.kind}-${event.detail}`,
+        time: '',
+        kind: event.kind,
+        subject: event.kind,
+        group: '',
+        location: '',
+        detail: event.detail,
+        status: null,
+      }))
+  const nextKnownEvent = [...visibleCalendarEvents]
+    .filter((event) => event.date > today)
+    .sort((first, second) => first.date.localeCompare(second.date))[0]
   const subjectCalendarEvents: CalendarEvent[] = subjectSchedule.map((event) => ({
     date: event.date,
     kind: event.kind,
@@ -364,6 +436,67 @@ function App() {
             <BookOutlined />
           </div>
         </section>}
+
+        {!isSubjectPath && !isSchedulePath && (
+          <section aria-labelledby="today-brief-title" className="today-brief">
+            <div className="today-brief-heading">
+              <Text className="section-kicker">СЕГОДНЯ · ГРУППА {selectedGroup}</Text>
+              <Title id="today-brief-title" level={2}>
+                Сегодня, {todayLabel}
+              </Title>
+              <Tag color={hasOfficialSchedule ? 'green' : 'gold'}>
+                {hasOfficialSchedule ? 'Официальное расписание' : 'Предварительные сведения'}
+              </Tag>
+            </div>
+            <div aria-live="polite" className="today-brief-content">
+              {todayAgendaItems.length > 0 ? (
+                <>
+                  <Text strong>План на сегодня</Text>
+                  {todayAgendaItems.map((event) => (
+                    <div className="today-agenda-item" key={event.key}>
+                      <Text className="today-agenda-time">
+                        {event.time || event.kind}
+                      </Text>
+                      <div className="today-agenda-copy">
+                        <div className="today-agenda-title">
+                          <Text strong>{event.subject}</Text>
+                          {event.status && (
+                            <Tag color={event.status === 'Сейчас идет' ? 'green' : 'blue'}>
+                              {event.status}
+                            </Tag>
+                          )}
+                        </div>
+                        {event.detail && <Text>{event.detail}</Text>}
+                        {(event.group || event.location) && (
+                          <Text type="secondary">
+                            {[event.group, event.location].filter(Boolean).join(' · ')}
+                          </Text>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <Text className="today-brief-empty">
+                  {hasOfficialSchedule
+                    ? 'Сегодня по опубликованному расписанию учебных мероприятий нет.'
+                    : 'На сегодня учебные мероприятия в имеющихся сведениях не указаны.'}
+                </Text>
+              )}
+              {nextKnownEvent ? (
+                <div className="today-next-event">
+                  <Text className="today-next-label">Ближайшее далее</Text>
+                  <Text strong>
+                    {formatScheduleDate(nextKnownEvent.date)} · {nextKnownEvent.kind}
+                  </Text>
+                  <Text type="secondary">{nextKnownEvent.detail}</Text>
+                </div>
+              ) : !todayAgendaItems.length ? (
+                <Text type="secondary">Ближайшие даты пока не указаны.</Text>
+              ) : null}
+            </div>
+          </section>
+        )}
 
         {!isSubjectPath && !isSchedulePath && (
           <section className="schedule-panel" aria-labelledby="schedule-title">
