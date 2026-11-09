@@ -504,11 +504,6 @@ function App() {
                               Кабинет 213 общий с кафедрой гражданского права.
                             </Text>
                           )}
-                          {departmentContacts.find((contact) => contact.department === department)?.email === null && (
-                            <Text className="coursework-form-caution">
-                              По примечанию в CSV отдельные e-mail гражданского и уголовного права не публикуются.
-                            </Text>
-                          )}
                           {department !== 'Кафедра криминалистики' && (
                             <Text className="department-availability">
                               Информация о свободных местах не указана.
