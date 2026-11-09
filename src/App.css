@@ -154,6 +154,27 @@
   border-radius: 999px;
 }
 
+.schedule-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.schedule-full-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #2f6948;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.schedule-full-link:hover {
+  color: #1d5034;
+  text-decoration: underline;
+}
+
 .schedule-alert.ant-alert {
   margin-bottom: 14px;
   border: 1px solid #f1e4b7;
@@ -173,19 +194,107 @@
   line-height: 1.55;
 }
 
-.schedule-dates {
-  margin-top: 0;
+.calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(210px, 0.62fr);
+  gap: 26px;
+  align-items: start;
 }
 
-.schedule-date {
+.calendar-months {
   display: grid;
-  min-height: 112px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+.calendar-month h3.ant-typography {
+  margin: 0 0 12px;
+  color: #3a392f;
+  font-size: 16px;
+  font-weight: 650;
+  text-transform: capitalize;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  text-align: center;
+}
+
+.calendar-weekdays {
+  margin-bottom: 5px;
+}
+
+.calendar-weekdays .ant-typography {
+  color: #92978d;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.calendar-day {
+  display: grid;
+  min-width: 0;
+  min-height: 38px;
+  align-content: center;
+  justify-items: center;
+  gap: 3px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: #72786f;
+  font-size: 12px;
+}
+
+button.calendar-day {
+  cursor: pointer;
+  font: inherit;
+}
+
+.calendar-event-day {
+  border-color: #e6e9dc !important;
+  background: #fff !important;
+  color: #34493c;
+}
+
+.calendar-event-day:hover,
+.calendar-event-day.is-selected {
+  border-color: #5e8969 !important;
+  background: #edf4ed !important;
+  color: #285a47;
+}
+
+.calendar-event-marker {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #b38732;
+}
+
+.calendar-selection {
+  display: grid;
+  min-height: 100%;
   align-content: start;
+  gap: 10px;
+  padding: 4px 0 4px 22px;
+  border-left: 1px solid #ece8d8;
+}
+
+.calendar-selection .section-kicker {
+  margin: 0;
+  color: #8c7c4c;
+}
+
+.calendar-selection h3.ant-typography {
+  margin: 0 0 4px;
+  color: #3a392f;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.calendar-event-detail {
+  display: grid;
   gap: 5px;
-  padding: 14px;
-  border: 1px solid #eeeade;
-  border-radius: 14px;
-  background: #fff;
+  padding-top: 10px;
+  border-top: 1px solid #eeeade;
 }
 
 .schedule-date-value {
@@ -204,6 +313,51 @@
   color: #7d8277;
   font-size: 11px;
   line-height: 1.45;
+}
+
+.expanded-schedule {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 52px 0 28px;
+}
+
+.expanded-schedule > .back-link {
+  margin-bottom: 24px;
+}
+
+.expanded-schedule h2.ant-typography {
+  margin: 0 0 24px;
+  color: #1e3028;
+  font-size: 28px;
+  font-weight: 650;
+}
+
+.official-schedule-list {
+  display: grid;
+  gap: 10px;
+}
+
+.official-schedule-item {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.8fr) minmax(0, 2fr);
+  gap: 20px;
+  padding: 16px;
+  border: 1px solid #e8ece6;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.official-schedule-item > div:first-child,
+.official-schedule-details {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+
+.official-schedule-details {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  color: #526357;
+  font-size: 13px;
 }
 
 .subjects-section {
@@ -671,6 +825,33 @@
   .schedule-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .schedule-actions {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .calendar-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .calendar-selection {
+    min-height: auto;
+    padding: 16px 0 0;
+    border-top: 1px solid #ece8d8;
+    border-left: 0;
+  }
+
+  .official-schedule-item {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .official-schedule-details {
+    grid-template-columns: 1fr;
   }
 
   .section-heading {

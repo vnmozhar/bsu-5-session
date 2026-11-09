@@ -45,26 +45,37 @@ export interface PublicSubject {
 
 export const preliminarySchedule = [
   {
-    date: '19 ноября 2026',
+    date: '2026-11-19',
     kind: 'Зачеты',
     detail: 'Утром, возможное начало в 9:00 или 9:30',
   },
   {
-    date: '20 ноября 2026',
+    date: '2026-11-20',
     kind: 'Зачеты',
     detail: 'Утром, возможное начало в 9:00 или 9:30',
   },
   {
-    date: '21 ноября 2026',
+    date: '2026-11-21',
     kind: 'Зачеты',
     detail: 'Утром, возможное начало в 9:00 или 9:30',
   },
   {
-    date: '5 декабря 2026',
+    date: '2026-12-05',
     kind: 'Экзамены',
     detail: 'Планируются у двух групп, предметы и время неизвестны',
   },
 ] as const
+
+export interface OfficialScheduleEntry {
+  date: string
+  time: string
+  kind: 'Зачет' | 'Экзамен'
+  subject: string
+  group: string
+  location: string
+}
+
+export const officialSchedule: readonly OfficialScheduleEntry[] = []
 
 export const publicSubjects: readonly PublicSubject[] = [
   {

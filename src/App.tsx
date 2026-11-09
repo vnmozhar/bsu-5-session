@@ -23,18 +23,71 @@ import {
   Typography,
   theme,
 } from 'antd'
-import { preliminarySchedule, publicSubjects } from './data/publicSubjects'
+import {
+  officialSchedule,
+  preliminarySchedule,
+  publicSubjects,
+} from './data/publicSubjects'
 import './App.css'
 
 const { Paragraph, Text, Title } = Typography
+const weekdayLabels = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
+
+function parseScheduleDate(date: string) {
+  const [year, month, day] = date.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+function formatScheduleDate(date: string) {
+  return parseScheduleDate(date).toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
 
 function App() {
   const [query, setQuery] = useState('')
   const normalizedQuery = query.trim().toLocaleLowerCase('ru')
   const currentPath = window.location.pathname.replace(/\/+$/, '') || '/'
   const isSubjectPath = currentPath.startsWith('/subjects/')
+  const isSchedulePath = currentPath === '/schedule'
   const selectedSubject = publicSubjects.find(
     (subject) => currentPath === `/subjects/${subject.id}`,
+  )
+  const hasOfficialSchedule = officialSchedule.length > 0
+  const calendarEvents = hasOfficialSchedule
+    ? officialSchedule.map((event) => ({
+        date: event.date,
+        kind: event.kind,
+        detail: `${event.time} · ${event.subject} · ${event.group} · ${event.location}`,
+      }))
+    : preliminarySchedule
+  const [selectedDate, setSelectedDate] = useState(
+    calendarEvents[0]?.date ?? '',
+  )
+  const calendarMonths = Array.from(
+    new Set(calendarEvents.map((event) => event.date.slice(0, 7))),
+  ).map((monthKey) => {
+    const [year, month] = monthKey.split('-').map(Number)
+    const firstDay = new Date(year, month - 1, 1)
+    const startOffset = (firstDay.getDay() + 6) % 7
+    const dayCount = new Date(year, month, 0).getDate()
+
+    return {
+      key: monthKey,
+      title: firstDay.toLocaleDateString('ru-RU', {
+        month: 'long',
+        year: 'numeric',
+      }),
+      days: [
+        ...Array.from({ length: startOffset }, () => null),
+        ...Array.from({ length: dayCount }, (_, index) => index + 1),
+      ],
+    }
+  })
+  const selectedEvents = calendarEvents.filter(
+    (event) => event.date === selectedDate,
   )
 
   const filteredSubjects = useMemo(
@@ -75,7 +128,7 @@ function App() {
       }}
     >
       <main className="dashboard">
-        {!isSubjectPath && <section className="hero">
+        {!isSubjectPath && !isSchedulePath && <section className="hero">
           <div className="hero-content">
             <Tag className="eyebrow">
               <BookOutlined /> Учебная навигация
@@ -96,42 +149,149 @@ function App() {
           </div>
         </section>}
 
-        {!isSubjectPath && <section className="schedule-panel" aria-labelledby="schedule-title">
-          <div className="schedule-heading">
-            <div className="schedule-title-wrap">
-              <span className="schedule-icon">
-                <CalendarOutlined />
-              </span>
-              <div>
-                <Text className="section-kicker">СЕССИЯ 2026</Text>
-                <Title id="schedule-title" level={2}>
-                  Предварительные даты
-                </Title>
+        {!isSubjectPath && !isSchedulePath && (
+          <section className="schedule-panel" aria-labelledby="schedule-title">
+            <div className="schedule-heading">
+              <div className="schedule-title-wrap">
+                <span className="schedule-icon">
+                  <CalendarOutlined />
+                </span>
+                <div>
+                  <Text className="section-kicker">СЕССИЯ 2026</Text>
+                  <Title id="schedule-title" level={2}>
+                    Календарь сессии
+                  </Title>
+                </div>
+              </div>
+              <div className="schedule-actions">
+                <Tag color={hasOfficialSchedule ? 'green' : 'gold'}>
+                  {hasOfficialSchedule ? 'Опубликовано' : 'Предварительно'}
+                </Tag>
+                {hasOfficialSchedule && (
+                  <a className="schedule-full-link" href="/schedule">
+                    Полное расписание <ArrowRightOutlined />
+                  </a>
+                )}
               </div>
             </div>
-            <Tag color="gold">Неофициальная информация</Tag>
-          </div>
-          <Alert
-            className="schedule-alert"
-            title="Расписание пока согласуется"
-            description="Даты не привязаны к конкретным предметам или группам. Ожидается публикация расписания 11 ноября. Время и распределение дисциплин пока неизвестны."
-            showIcon
-            type="warning"
-          />
-          <Row gutter={[12, 12]} className="schedule-dates">
-            {preliminarySchedule.map((item) => (
-              <Col key={item.date} xs={24} sm={12} xl={6}>
-                <div className="schedule-date">
-                  <Text className="schedule-date-value">{item.date}</Text>
-                  <Text className="schedule-date-kind">{item.kind}</Text>
-                  <Text className="schedule-date-detail">{item.detail}</Text>
-                </div>
-              </Col>
-            ))}
-          </Row>
-        </section>}
+            <Alert
+              className="schedule-alert"
+              title={
+                hasOfficialSchedule
+                  ? 'Официальное расписание опубликовано'
+                  : 'Расписание пока согласуется'
+              }
+              description={
+                hasOfficialSchedule
+                  ? 'Календарь показывает даты занятий. Откройте полное расписание, чтобы посмотреть время, предметы, группы и аудитории.'
+                  : 'Пока известны только предварительные даты. Предметы, группы и время еще не подтверждены.'
+              }
+              showIcon
+              type={hasOfficialSchedule ? 'success' : 'warning'}
+            />
+            <div className="calendar-layout">
+              <div className="calendar-months">
+                {calendarMonths.map((month) => (
+                  <section
+                    aria-label={`Календарь: ${month.title}`}
+                    className="calendar-month"
+                    key={month.key}
+                  >
+                    <Title level={3}>{month.title}</Title>
+                    <div className="calendar-grid calendar-weekdays">
+                      {weekdayLabels.map((weekday) => (
+                        <Text key={weekday}>{weekday}</Text>
+                      ))}
+                    </div>
+                    <div className="calendar-grid calendar-days">
+                      {month.days.map((day, index) => {
+                        if (day === null) {
+                          return <span aria-hidden="true" key={`blank-${index}`} />
+                        }
 
-        <section className="subjects-section" aria-labelledby="subjects-title">
+                        const date = `${month.key}-${String(day).padStart(2, '0')}`
+                        const events = calendarEvents.filter(
+                          (event) => event.date === date,
+                        )
+
+                        return events.length > 0 ? (
+                          <button
+                            aria-label={`${formatScheduleDate(date)}: ${events.map((event) => event.kind).join(', ')}`}
+                            aria-pressed={selectedDate === date}
+                            className={`calendar-day calendar-event-day${selectedDate === date ? ' is-selected' : ''}`}
+                            key={date}
+                            onClick={() => setSelectedDate(date)}
+                            title={events.map((event) => event.detail).join('; ')}
+                            type="button"
+                          >
+                            <span>{day}</span>
+                            <span className="calendar-event-marker" />
+                          </button>
+                        ) : (
+                          <span className="calendar-day" key={date}>
+                            {day}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  </section>
+                ))}
+              </div>
+              <aside aria-live="polite" className="calendar-selection">
+                <Text className="section-kicker">ВЫБРАННАЯ ДАТА</Text>
+                {selectedDate ? (
+                  <>
+                    <Title level={3}>{formatScheduleDate(selectedDate)}</Title>
+                    {selectedEvents.map((event) => (
+                      <div className="calendar-event-detail" key={`${event.date}-${event.kind}-${event.detail}`}>
+                        <Text className="schedule-date-kind">{event.kind}</Text>
+                        <Text className="schedule-date-detail">{event.detail}</Text>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <Text>Даты пока не указаны</Text>
+                )}
+              </aside>
+            </div>
+          </section>
+        )}
+
+        {isSchedulePath && (
+          <section className="expanded-schedule" aria-labelledby="expanded-schedule-title">
+            <a className="back-link" href="/">
+              <ArrowLeftOutlined /> Календарь сессии
+            </a>
+            <Text className="section-kicker">СЕССИЯ 2026</Text>
+            <Title id="expanded-schedule-title" level={2}>
+              Полное расписание
+            </Title>
+            {hasOfficialSchedule ? (
+              <div className="official-schedule-list">
+                {officialSchedule.map((event) => (
+                  <article className="official-schedule-item" key={`${event.date}-${event.time}-${event.group}`}>
+                    <div>
+                      <Text className="schedule-date-value">
+                        {formatScheduleDate(event.date)}
+                      </Text>
+                      <Text className="schedule-date-kind">{event.kind}</Text>
+                    </div>
+                    <div className="official-schedule-details">
+                      <Text strong>{event.time}</Text>
+                      <Text>{event.subject}</Text>
+                      <Text>{event.group}</Text>
+                      <Text>{event.location}</Text>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <Empty description="Официальное расписание еще не опубликовано" />
+            )}
+          </section>
+        )}
+
+        {!isSchedulePath && <section className="subjects-section" aria-labelledby="subjects-title">
           <div className="section-heading">
             {selectedSubject ? (
               <div className="subject-page-heading">
@@ -415,9 +575,9 @@ function App() {
               description="По вашему запросу ничего не найдено"
             />
           )}
-        </section>
+        </section>}
 
-        {!isSubjectPath && <footer className="dashboard-footer">
+        {!isSubjectPath && !isSchedulePath && <footer className="dashboard-footer">
           <Space size={8}>
             <span className="footer-mark" />
             <Text type="secondary">

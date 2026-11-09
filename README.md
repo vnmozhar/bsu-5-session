@@ -17,10 +17,12 @@ npm run build
 
 ## Публикация на Vercel
 
-- Root Directory: `workspace/projects/session-dashboard`
+- Root Directory: `.`
 - Build Command: `npm run build`
 - Output Directory: `dist`
 - Framework Preset: Vite
+
+The website-only GitHub repository has the app files at its root, so set Root Directory to `.`. `vercel.json` rewrites direct requests to subject pages and `/schedule` to the SPA entry point.
 
 Приложение не загружает данные из архива заметок. Все даты и требования должны иметь отметку об источнике и статусе подтверждения; предварительное расписание нельзя привязывать к предмету или группе без подтверждения. Общие требования предмета и типы работ можно публиковать, но не личный статус выполнения, индивидуально назначенные темы, личные заметки и прогресс, оплату и задолженности, персональные ссылки или закрытые материалы. Анализ и предположения маркируются как таковые. Ссылки на порталы и материалы включайте только если они предоставлены и предназначены для публикации. Для предметов без разрешенной ссылки отображается пометка, что ссылка не добавлена.
 
