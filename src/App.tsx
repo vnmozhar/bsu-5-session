@@ -566,46 +566,49 @@ function App() {
                     </Text>
                   </div>
                   <div className="practice-materials">
-                    <Text className="practice-materials-heading">Образцы заявлений</Text>
-                    <a
-                      className="practice-material-link"
-                      download
-                      href="/materials/practice/application-law-enforcement-practice.doc"
-                    >
-                      <FileTextOutlined />
-                      <span>Правоприменительная практика</span>
-                      <Text className="material-format">DOC</Text>
-                      <DownloadOutlined />
-                    </a>
-                    <a
-                      className="practice-material-link"
-                      download
-                      href="/materials/practice/application-professional-oriented-practice.doc"
-                    >
-                      <FileTextOutlined />
-                      <span>Профессионально-ориентированная практика</span>
-                      <Text className="material-format">DOC</Text>
-                      <DownloadOutlined />
-                    </a>
-                    <a
-                      className="practice-material-link practice-combined-form"
-                      download
-                      href="/materials/practice/application-both-practices.doc"
-                    >
-                      <FileTextOutlined />
-                      <span>Объединенное заявление на обе практики</span>
-                      <Text className="material-format">DOC</Text>
-                      <DownloadOutlined />
-                    </a>
-                    <Text className="practice-form-caution">
-                      Объединенную форму использовать только после согласования
-                      с деканатом; объявление требует отдельное заявление на каждый
-                      вид практики.
-                    </Text>
-                    <div className="practice-material-group">
-                      <Text className="practice-materials-heading">
-                        Образцы гарантийных писем
-                      </Text>
+                    <details className="practice-collapsible">
+                      <summary>Образцы заявлений (3)</summary>
+                      <div className="practice-collapsible-content">
+                        <a
+                          className="practice-material-link"
+                          download
+                          href="/materials/practice/application-law-enforcement-practice.doc"
+                        >
+                          <FileTextOutlined />
+                          <span>Правоприменительная практика</span>
+                          <Text className="material-format">DOC</Text>
+                          <DownloadOutlined />
+                        </a>
+                        <a
+                          className="practice-material-link"
+                          download
+                          href="/materials/practice/application-professional-oriented-practice.doc"
+                        >
+                          <FileTextOutlined />
+                          <span>Профессионально-ориентированная практика</span>
+                          <Text className="material-format">DOC</Text>
+                          <DownloadOutlined />
+                        </a>
+                        <a
+                          className="practice-material-link practice-combined-form"
+                          download
+                          href="/materials/practice/application-both-practices.doc"
+                        >
+                          <FileTextOutlined />
+                          <span>Объединенное заявление на обе практики</span>
+                          <Text className="material-format">DOC</Text>
+                          <DownloadOutlined />
+                        </a>
+                        <Text className="practice-form-caution">
+                          Объединенную форму использовать только после согласования
+                          с деканатом; объявление требует отдельное заявление на каждый
+                          вид практики.
+                        </Text>
+                      </div>
+                    </details>
+                    <details className="practice-collapsible">
+                      <summary>Образцы гарантийных писем (2)</summary>
+                      <div className="practice-collapsible-content">
                       <a
                         className="practice-material-link"
                         download
@@ -630,7 +633,8 @@ function App() {
                         Второй шаблон назван учебным, но в тексте охватывает
                         правоприменительную и профессионально-ориентированную практики.
                       </Text>
-                    </div>
+                      </div>
+                    </details>
                   </div>
                 </div>
               </article>
