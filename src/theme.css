@@ -1,0 +1,53 @@
+:root {
+  /* ===== Brand palette (BSU official colors) ===== */
+  --color-primary-900: #0A3470; /* RGB 10,52,112  — header, footer, h1-h3, primary button */
+  --color-primary-700: #144E9D; /* RGB 20,78,157  — links, active nav, primary button */
+  --color-primary-500: #3076AF; /* RGB 48,118,175 — hover, icons, secondary button */
+  --color-primary-100: #E8EFF8; /* derived tint   — hover bg, chips, table rows */
+
+  --color-accent-gold:       #D9CBA0; /* RGB 217,203,160 — decorative fills, dividers, banners */
+  --color-accent-gold-dark:  #B8A565; /* text-safe gold on light bg, 4.5:1+ contrast */
+  --color-accent-teal:       #7BB8BF; /* RGB 123,184,191 — tags, info blocks, soft highlights */
+  --color-accent-teal-light: #E4F1F2;
+
+  /* ===== Semantic tokens ===== */
+  --color-bg-page: #FFFFFF;
+  --color-bg-section: #F5F7FA;
+  --color-bg-inverse: #0A3470;
+  --color-border: #E3E8EF;
+  --color-text-primary: #1A202C;
+  --color-text-secondary: #4A5568;
+  --color-text-inverse: #FFFFFF;
+  --color-text-link: #144E9D;
+
+  --color-success: #2F855A;
+  --color-warning: #B7791F;
+  --color-error: #C53030;
+
+  /* ===== Typography ===== */
+  --font-family-base: "Segoe UI", Roboto, Arial, sans-serif;
+  --font-family-heading: Georgia, "Times New Roman", serif;
+  --font-size-base: 16px;
+  --font-size-sm: 14px;
+  --font-size-h1: 32px;
+  --font-size-h2: 26px;
+  --font-size-h3: 20px;
+  --line-height-base: 1.6;
+
+  /* ===== Spacing, shape, elevation ===== */
+  --space-unit: 8px;
+  --space-sm: 8px; --space-md: 16px; --space-lg: 24px; --space-xl: 40px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-card: 0 2px 8px rgba(10, 52, 112, 0.08);
+  --shadow-card-hover: 0 4px 16px rgba(10, 52, 112, 0.14);
+}
+
+/* ===== Usage rules =====
+1. Links, buttons, active navigation: only primary-* shades. Focus ring: #3076AF, 2px.
+2. Never use #D9CBA0 as text color on white — decorative only; use #B8A565 for gold text.
+3. Minimum text contrast: WCAG AA (4.5:1).
+4. Headings: serif (--font-family-heading); UI/body: sans (--font-family-base).
+5. Hover: primary button darkens to #0A3470; secondary button fills with --color-primary-100.
+6. Success/warning/error colors are reserved for states only, not for decoration.
+*/
