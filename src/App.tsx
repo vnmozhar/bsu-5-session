@@ -203,6 +203,27 @@ function App() {
   const selectedSubjectEvents = subjectSchedule.filter(
     (event) => event.date === selectedSubjectDate,
   )
+  const examSubjects = publicSubjects.filter(
+    (subject) => subject.assessment.type === 'Экзамен',
+  )
+  const creditSubjects = publicSubjects.filter(
+    (subject) => subject.assessment.type === 'Зачет',
+  )
+  const courseworkDepartments = Array.from(
+    publicSubjects.reduce<Map<string, string[]>>((departments, subject) => {
+      if (subject.department) {
+        const subjects = departments.get(subject.department) ?? []
+        subjects.push(subject.name)
+        departments.set(subject.department, subjects)
+      }
+
+      return departments
+    }, new Map()),
+    ([department, subjects]) => ({ department, subjects }),
+  )
+  const controlWorkSubjects = publicSubjects.filter(
+    (subject) => subject.controlWork,
+  )
 
   const filteredSubjects = useMemo(
     () =>
@@ -363,6 +384,139 @@ function App() {
           </section>
         )}
 
+        {!isSubjectPath && !isSchedulePath && (
+          <section
+            aria-labelledby="session-overview-title"
+            className="session-overview"
+          >
+            <div className="session-overview-heading">
+              <Text className="section-kicker">СЕССИЯ 2026</Text>
+              <Title id="session-overview-title" level={2}>
+                Что в сессии
+              </Title>
+              <Text type="secondary">
+                Типы аттестации указаны в данных предметов. Даты экзаменов и
+                зачетов по дисциплинам пока не распределены.
+              </Text>
+            </div>
+            <div className="session-overview-grid">
+              <article className="session-overview-item">
+                <div className="session-overview-item-heading">
+                  <Title level={3}>Экзамены</Title>
+                  <Tag color="blue">{examSubjects.length}</Tag>
+                </div>
+                <ul className="session-subject-list">
+                  {examSubjects.map((subject) => (
+                    <li key={subject.id}>
+                      <a href={`/subjects/${subject.id}`}>{subject.name}</a>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+
+              <article className="session-overview-item">
+                <div className="session-overview-item-heading">
+                  <Title level={3}>Зачеты</Title>
+                  <Tag color="green">{creditSubjects.length}</Tag>
+                </div>
+                <ul className="session-subject-list">
+                  {creditSubjects.map((subject) => (
+                    <li key={subject.id}>
+                      <a href={`/subjects/${subject.id}`}>{subject.name}</a>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+
+              <article className="session-overview-item">
+                <div className="session-overview-item-heading">
+                  <Title level={3}>Курсовая</Title>
+                  <Tag color="gold">по предоставленной информации</Tag>
+                </div>
+                <Text className="session-overview-note">
+                  Информация о свободных местах по большинству кафедр не указана.
+                </Text>
+                <details className="coursework-chairs">
+                  <summary>
+                    Кафедры и связанные предметы ({courseworkDepartments.length})
+                  </summary>
+                  <ul className="session-subject-list">
+                    {courseworkDepartments.map(({ department, subjects }) => (
+                      <li className="coursework-department" key={department}>
+                        <span className="coursework-department-name">{department}</span>
+                        <Text className="department-availability">
+                          {department === 'Кафедра криминалистики'
+                            ? 'По информации из Telegram-группы, мест уже нет.'
+                            : 'Информация о местах не указана.'}
+                        </Text>
+                        <Text className="coursework-department-subjects">
+                          Предметы: {subjects.join(', ')}
+                        </Text>
+                      </li>
+                    ))}
+                    <li>
+                      <span>Право собственности и другие вещные права</span>
+                      <Text className="department-availability">
+                        Кафедра не указана в данных предмета
+                      </Text>
+                    </li>
+                  </ul>
+                </details>
+                <Text className="session-overview-note">
+                  Требования по оформлению курсовых и дипломных: ссылка на актуальную методичку не добавлена.
+                </Text>
+              </article>
+
+              <article className="session-overview-item">
+                <div className="session-overview-item-heading">
+                  <Title level={3}>Контрольная работа</Title>
+                  <Tag>{controlWorkSubjects.length}</Tag>
+                </div>
+                {controlWorkSubjects.length > 0 ? (
+                  <ul className="session-subject-list">
+                    {controlWorkSubjects.map((subject) => (
+                      <li key={subject.id}>
+                        <a href={`/subjects/${subject.id}`}>{subject.name}</a>
+                        <details className="control-work-details">
+                          <summary>{subject.controlWork?.status}</summary>
+                          {(subject.materials ?? [])
+                            .filter((material) =>
+                              /контрольной работе/i.test(material.title),
+                            )
+                            .map((material) => (
+                              <a
+                                className="material-link"
+                                download
+                                href={material.href}
+                                key={material.href}
+                              >
+                                <FileTextOutlined />
+                                <span>{material.title}</span>
+                                <Text className="material-format">
+                                  {material.format}
+                                </Text>
+                                <DownloadOutlined />
+                              </a>
+                            ))}
+                          {subject.controlWork?.caution && (
+                            <Text className="session-overview-caution">
+                              {subject.controlWork.caution}
+                            </Text>
+                          )}
+                        </details>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <Text className="session-overview-note">
+                    Предмет пока не указан
+                  </Text>
+                )}
+              </article>
+            </div>
+          </section>
+        )}
+
         {isSchedulePath && (
           <section className="expanded-schedule" aria-labelledby="expanded-schedule-title">
             <a className="back-link" href="/">
@@ -514,6 +668,66 @@ function App() {
                       </div>
                     </div>
 
+                    <div className="subject-overview-sections">
+                      <section className="detail-section course-info">
+                        <div className="detail-heading">
+                          <BookOutlined />
+                          <Text strong>Информация курса</Text>
+                        </div>
+                        {subject.courseInfo.map((item) => (
+                          <div className="course-note" key={item.text}>
+                            <Paragraph className="course-note-text">
+                              {item.text}
+                            </Paragraph>
+                            {item.caution && (
+                              <Text className="course-note-caution">
+                                {item.caution}
+                              </Text>
+                            )}
+                          </div>
+                        ))}
+                        {subject.courseInfo.length === 0 && (
+                          <Text className="empty-detail">
+                            Дополнительных сведений преподавателя в доступных
+                            материалах пока нет.
+                          </Text>
+                        )}
+                      </section>
+
+                      <section className="detail-section">
+                        <div className="detail-heading">
+                          <LinkOutlined />
+                          <Text strong>Полезные ссылки</Text>
+                        </div>
+                        {subject.portalUrl && (
+                          <a
+                            className="detail-link"
+                            href={subject.portalUrl}
+                            rel="noreferrer"
+                            target="_blank"
+                          >
+                            Учебный портал
+                          </a>
+                        )}
+                        {subject.links.map((link) => (
+                          <a
+                            className="detail-link"
+                            href={link.url}
+                            key={link.url}
+                            rel="noreferrer"
+                            target="_blank"
+                          >
+                            {link.title}
+                          </a>
+                        ))}
+                        {!subject.portalUrl && subject.links.length === 0 && (
+                          <Text className="empty-detail">
+                            Полезные ссылки пока не добавлены
+                          </Text>
+                        )}
+                      </section>
+                    </div>
+
                     {selectedSubject && (
                       <section
                         aria-labelledby="subject-schedule-title"
@@ -573,7 +787,7 @@ function App() {
                           Дополнительная информация на странице предмета
                         </Text>
                         <Text className="subject-page-teaser-content">
-                          Материалы курса · темы · аналитика · расписание занятий
+                          Материалы курса · требования · темы · аналитика · расписание
                         </Text>
                         <a className="subject-page-link" href={`/subjects/${subject.id}`}>
                           Открыть страницу предмета <ArrowRightOutlined />
@@ -582,31 +796,6 @@ function App() {
                     )}
 
                     {selectedSubject && <div className="subject-sections">
-                      <section className="detail-section course-info">
-                        <div className="detail-heading">
-                          <BookOutlined />
-                          <Text strong>Информация курса</Text>
-                        </div>
-                        {subject.courseInfo.map((item) => (
-                          <div className="course-note" key={item.text}>
-                            <Paragraph className="course-note-text">
-                              {item.text}
-                            </Paragraph>
-                            {item.caution && (
-                              <Text className="course-note-caution">
-                                {item.caution}
-                              </Text>
-                            )}
-                          </div>
-                        ))}
-                        {subject.courseInfo.length === 0 && (
-                          <Text className="empty-detail">
-                            Дополнительных сведений преподавателя в доступных
-                            материалах пока нет.
-                          </Text>
-                        )}
-                      </section>
-
                       {subject.materials && subject.materials.length > 0 && (
                         <details className="detail-accordion material-accordion">
                           <summary>
@@ -703,43 +892,6 @@ function App() {
                           </div>
                         </details>
                       )}
-
-                      <section className="detail-section">
-                        <div className="detail-heading">
-                          <LinkOutlined />
-                          <Text strong>Полезные ссылки</Text>
-                        </div>
-                        {subject.portalUrl ? (
-                          <a
-                            className="detail-link"
-                            href={subject.portalUrl}
-                            rel="noreferrer"
-                            target="_blank"
-                          >
-                            Учебный портал
-                          </a>
-                        ) : (
-                          <Text className="empty-detail">
-                            Ссылка на учебный портал не добавлена
-                          </Text>
-                        )}
-                        {subject.links.map((link) => (
-                          <a
-                            className="detail-link"
-                            href={link.url}
-                            key={link.url}
-                            rel="noreferrer"
-                            target="_blank"
-                          >
-                            {link.title}
-                          </a>
-                        ))}
-                        {subject.links.length === 0 && (
-                          <Text className="empty-detail">
-                            Других ссылок пока нет
-                          </Text>
-                        )}
-                      </section>
 
                       <section className="detail-section comments-section">
                         <div className="detail-heading">

@@ -365,6 +365,155 @@ button.calendar-day {
   font-weight: 700;
 }
 
+.session-overview {
+  margin: 0 0 12px;
+  padding: 26px;
+  border: 1px solid #e8ece6;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.session-overview-heading {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 20px;
+}
+
+.session-overview-heading .section-kicker {
+  margin: 0;
+}
+
+.session-overview-heading h2.ant-typography {
+  margin: 0;
+  color: #1e3028;
+  font-size: 22px;
+  font-weight: 650;
+}
+
+.session-overview-heading > .ant-typography:last-child {
+  font-size: 12px;
+}
+
+.session-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 28px;
+}
+
+.session-overview-item {
+  min-width: 0;
+  padding-top: 16px;
+  border-top: 1px solid #edf0ec;
+}
+
+.session-overview-item-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.session-overview-item-heading h3.ant-typography {
+  margin: 0;
+  color: #334a3c;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.session-overview-item-heading .ant-tag {
+  flex: 0 0 auto;
+  margin: 0;
+  border-radius: 999px;
+  font-size: 11px;
+}
+
+.session-subject-list {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding-left: 18px;
+  color: #526357;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.session-subject-list a {
+  color: #2f6948;
+  text-decoration: none;
+}
+
+.session-subject-list a:hover {
+  text-decoration: underline;
+}
+
+.session-overview-note,
+.session-overview-caution,
+.department-availability {
+  display: block;
+  color: #79867d;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.coursework-chairs {
+  margin-top: 10px;
+  border: 1px solid #e8ece6;
+  border-radius: 9px;
+}
+
+.coursework-chairs summary {
+  padding: 9px 10px;
+  color: #365441;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.coursework-chairs .session-subject-list {
+  padding: 0 12px 12px 30px;
+}
+
+.coursework-department {
+  display: grid;
+  gap: 3px;
+}
+
+.coursework-department-name {
+  color: #354b3c;
+  font-weight: 600;
+}
+
+.coursework-department-subjects {
+  color: #79867d;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.control-work-details {
+  margin-top: 6px;
+  border: 1px solid #e8ece6;
+  border-radius: 8px;
+}
+
+.control-work-details summary {
+  padding: 7px 9px;
+  color: #365441;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.control-work-details .material-link {
+  padding: 0 9px 9px;
+  font-size: 11px;
+}
+
+.session-overview-caution {
+  margin-top: 10px;
+  color: #9a6b24;
+}
+
 .calendar-day.is-outside-range {
   visibility: hidden;
 }
@@ -651,6 +800,13 @@ button.calendar-day {
 .instructor-position {
   color: #79867d;
   font-size: 12px;
+}
+
+.subject-overview-sections {
+  display: grid;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #edf0ec;
 }
 
 .subject-sections {
@@ -998,6 +1154,16 @@ button.calendar-day {
     align-items: flex-start;
     flex-direction: column;
     gap: 10px;
+  }
+
+  .session-overview {
+    padding: 20px 16px;
+    border-radius: 14px;
+  }
+
+  .session-overview-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .upcoming-events-heading {

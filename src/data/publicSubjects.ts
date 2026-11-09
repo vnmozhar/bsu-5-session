@@ -11,6 +11,10 @@ export interface PublicSubject {
     format: string
     source: string
   }
+  controlWork?: {
+    status: string
+    caution?: string
+  }
   courseInfo: readonly {
     text: string
     source: string
@@ -467,6 +471,9 @@ export const publicSubjects: readonly PublicSubject[] = [
       type: 'Экзамен',
       format: 'Формат не уточнен',
       source: 'Учебная заметка, требует подтверждения',
+    },
+    controlWork: {
+      status: 'Есть методические указания',
     },
     courseInfo: [
       {
