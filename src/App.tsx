@@ -292,7 +292,7 @@ function App() {
                   <CalendarOutlined />
                 </span>
                 <div>
-                  <Text className="section-kicker">СЕССИЯ 2026</Text>
+                  <Text className="section-kicker">СЕССИЯ 5 · ОСЕНЬ 2026</Text>
                   <Title id="schedule-title" level={2}>
                     Календарь сессии
                   </Title>
@@ -323,7 +323,7 @@ function App() {
               type={hasOfficialSchedule ? 'success' : 'warning'}
             />
             <Text className="session-range">
-              Сессия: с {formatScheduleDate(sessionRange.start)} по{' '}
+              Сессия 5 (осень 2026): с {formatScheduleDate(sessionRange.start)} по{' '}
               {formatScheduleDate(sessionRange.end)}
             </Text>
             <div className="calendar-layout">
@@ -390,7 +390,7 @@ function App() {
             className="session-overview"
           >
             <div className="session-overview-heading">
-              <Text className="section-kicker">СЕССИЯ 2026</Text>
+              <Text className="section-kicker">СЕССИЯ 5 · ОСЕНЬ 2026</Text>
               <Title id="session-overview-title" level={2}>
                 Что в сессии
               </Title>
@@ -444,11 +444,20 @@ function App() {
                     {courseworkDepartments.map(({ department, subjects }) => (
                       <li className="coursework-department" key={department}>
                         <span className="coursework-department-name">{department}</span>
-                        <Text className="department-availability">
-                          {department === 'Кафедра криминалистики'
-                            ? 'По информации из Telegram-группы, мест уже нет.'
-                            : 'Информация о местах не указана.'}
-                        </Text>
+                        {department === 'Кафедра криминалистики' ? (
+                          <div className="availability-status">
+                            <Tag className="availability-no-spaces" color="red">
+                              Мест нет
+                            </Tag>
+                            <Text className="department-availability">
+                              По информации из Telegram-группы
+                            </Text>
+                          </div>
+                        ) : (
+                          <Text className="department-availability">
+                            Информация о местах не указана.
+                          </Text>
+                        )}
                         <Text className="coursework-department-subjects">
                           Предметы: {subjects.join(', ')}
                         </Text>
@@ -532,12 +541,12 @@ function App() {
             <a className="back-link" href="/">
               <ArrowLeftOutlined /> Календарь сессии
             </a>
-            <Text className="section-kicker">СЕССИЯ 2026</Text>
+            <Text className="section-kicker">СЕССИЯ 5 · ОСЕНЬ 2026</Text>
             <Title id="expanded-schedule-title" level={2}>
               Полное расписание
             </Title>
             <Text className="session-range">
-              Сессия: с {formatScheduleDate(sessionRange.start)} по{' '}
+              Сессия 5 (осень 2026): с {formatScheduleDate(sessionRange.start)} по{' '}
               {formatScheduleDate(sessionRange.end)}
             </Text>
             <div className="calendar-layout expanded-calendar-layout">

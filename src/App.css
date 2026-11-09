@@ -484,6 +484,19 @@ button.calendar-day {
   font-weight: 600;
 }
 
+.availability-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.availability-no-spaces.ant-tag {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 650;
+}
+
 .coursework-department-subjects {
   color: #79867d;
   font-size: 11px;
