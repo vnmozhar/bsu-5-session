@@ -75,6 +75,75 @@ export const sessionRange = {
   end: '2026-12-05',
 } as const
 
+export interface DepartmentContact {
+  department: string
+  head: string
+  room: string
+  phone: string
+  email: string | null
+  headPhone?: string
+}
+
+export const departmentContacts: readonly DepartmentContact[] = [
+  {
+    department: 'Кафедра гражданского права',
+    head: 'Мещанова Мария Валентиновна',
+    room: '212-213',
+    phone: '+375 17 209-55-74',
+    email: null,
+  },
+  {
+    department: 'Кафедра экологического и аграрного права',
+    head: 'Макарова Тамара Ивановна',
+    room: '310-311',
+    phone: '+375 17 209-55-77',
+    email: 'ekolog_310@mail.ru',
+  },
+  {
+    department: 'Кафедра уголовного процесса и прокурорского надзора',
+    head: 'Данилевич Анатолий Александрович',
+    room: '504-505',
+    phone: '+375 17 209-55-61',
+    email: 'DanilevichA@bsu.by',
+  },
+  {
+    department: 'Кафедра криминалистики',
+    head: 'Шабанов Вячеслав Борисович',
+    room: '112-113',
+    phone: '+375 17 209-55-75',
+    email: 'lawcrim@bsu.by',
+  },
+  {
+    department: 'Кафедра хозяйственного права',
+    head: 'Бондаренко Наталья Леонидовна',
+    room: '203-204',
+    phone: '+375 17 209-55-73',
+    email: 'haspadar204@bsu.by',
+  },
+  {
+    department: 'Кафедра уголовного права',
+    head: 'Савенок Анатолий Леонидович',
+    room: '602-603',
+    phone: '+375 17 209-55-60',
+    email: null,
+  },
+  {
+    department: 'Кафедра права интеллектуальной собственности',
+    head: 'Свадковская Елена Александровна',
+    room: '213',
+    phone: '+375 17 209-55-93',
+    email: 'jur_ip@bsu.by',
+    headPhone: '+375 17 209-55-94',
+  },
+]
+
+export const facultyContacts = {
+  deaneryPhone: '+375 17 209-55-82',
+  receptionPhone: '+375 17 209-52-30',
+  email: 'law@bsu.by',
+  address: '220006, Минск, ул. Ленинградская, 8',
+} as const
+
 export interface OfficialScheduleEntry {
   subjectId: string
   date: string
@@ -611,7 +680,7 @@ export const publicSubjects: readonly PublicSubject[] = [
   {
     id: 'property-law',
     name: 'Право собственности и другие вещные права',
-    department: null,
+    department: 'Кафедра гражданского права',
     instructor: { name: 'Реуцкая Е. А.', position: 'старший преподаватель' },
     assessment: {
       type: 'Зачет',

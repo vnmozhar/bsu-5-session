@@ -24,6 +24,8 @@ import {
   theme,
 } from 'antd'
 import {
+  departmentContacts,
+  facultyContacts,
   officialSchedule,
   preliminarySchedule,
   publicSubjects,
@@ -210,10 +212,10 @@ function App() {
     (subject) => subject.assessment.type === 'Зачет',
   )
   const courseworkDepartments = Array.from(
-    publicSubjects.reduce<Map<string, string[]>>((departments, subject) => {
+    publicSubjects.reduce<Map<string, typeof publicSubjects[number][]>>((departments, subject) => {
       if (subject.department) {
         const subjects = departments.get(subject.department) ?? []
-        subjects.push(subject.name)
+        subjects.push(subject)
         departments.set(subject.department, subjects)
       }
 
@@ -438,38 +440,99 @@ function App() {
                 </Text>
                 <details className="coursework-chairs">
                   <summary>
-                    Кафедры и связанные предметы ({courseworkDepartments.length})
+                    Кафедры и контакты ({courseworkDepartments.length})
                   </summary>
-                  <ul className="session-subject-list">
+                  <div className="coursework-department-list">
                     {courseworkDepartments.map(({ department, subjects }) => (
-                      <li className="coursework-department" key={department}>
-                        <span className="coursework-department-name">{department}</span>
-                        {department === 'Кафедра криминалистики' ? (
-                          <div className="availability-status">
+                      <details className="coursework-department" key={department}>
+                        <summary className="coursework-department-summary">
+                          <span>{department}</span>
+                          {department === 'Кафедра криминалистики' && (
                             <Tag className="availability-no-spaces" color="red">
                               Мест нет
                             </Tag>
-                            <Text className="department-availability">
-                              По информации из Telegram-группы
-                            </Text>
+                          )}
+                        </summary>
+                        <div className="coursework-department-content">
+                          <div className="coursework-detail-row">
+                            <Text className="coursework-detail-label">Заведующий</Text>
+                            <Text>{departmentContacts.find((contact) => contact.department === department)?.head ?? 'Информация не указана'}</Text>
                           </div>
-                        ) : (
-                          <Text className="department-availability">
-                            Информация о местах не указана.
-                          </Text>
-                        )}
-                        <Text className="coursework-department-subjects">
-                          Предметы: {subjects.join(', ')}
-                        </Text>
-                      </li>
+                          <div className="coursework-detail-row">
+                            <Text className="coursework-detail-label">Предметы</Text>
+                            <div className="coursework-subject-links">
+                              {subjects.map((subject) => (
+                                <a href={`/subjects/${subject.id}`} key={subject.id}>
+                                  {subject.name}
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="coursework-detail-row">
+                            <Text className="coursework-detail-label">Кабинет</Text>
+                            <Text>{departmentContacts.find((contact) => contact.department === department)?.room ?? 'Не указан'}</Text>
+                          </div>
+                          <div className="coursework-detail-row">
+                            <Text className="coursework-detail-label">Контакты</Text>
+                            <div className="coursework-contact-links">
+                              {departmentContacts.find((contact) => contact.department === department)?.phone && (
+                                <a href={`tel:${departmentContacts.find((contact) => contact.department === department)?.phone}`}>
+                                  {departmentContacts.find((contact) => contact.department === department)?.phone}
+                                </a>
+                              )}
+                              {departmentContacts.find((contact) => contact.department === department)?.email ? (
+                                <a href={`mailto:${departmentContacts.find((contact) => contact.department === department)?.email}`}>
+                                  {departmentContacts.find((contact) => contact.department === department)?.email}
+                                </a>
+                              ) : (
+                                <Text>e-mail не публикуется</Text>
+                              )}
+                              {departmentContacts.find((contact) => contact.department === department)?.headPhone && (
+                                <Text>
+                                  Телефон кабинета заведующей: {departmentContacts.find((contact) => contact.department === department)?.headPhone}
+                                </Text>
+                              )}
+                            </div>
+                          </div>
+                          {department === 'Кафедра криминалистики' && (
+                            <Text className="coursework-form-caution">
+                              По информации из Telegram-группы, мест уже нет.
+                            </Text>
+                          )}
+                          {department === 'Кафедра права интеллектуальной собственности' && (
+                            <Text className="coursework-form-caution">
+                              Кабинет 213 общий с кафедрой гражданского права.
+                            </Text>
+                          )}
+                          {departmentContacts.find((contact) => contact.department === department)?.email === null && (
+                            <Text className="coursework-form-caution">
+                              По примечанию в CSV отдельные e-mail гражданского и уголовного права не публикуются.
+                            </Text>
+                          )}
+                          {department !== 'Кафедра криминалистики' && (
+                            <Text className="department-availability">
+                              Информация о свободных местах не указана.
+                            </Text>
+                          )}
+                        </div>
+                      </details>
                     ))}
-                    <li>
-                      <span>Право собственности и другие вещные права</span>
-                      <Text className="department-availability">
-                        Кафедра не указана в данных предмета
-                      </Text>
-                    </li>
-                  </ul>
+                  </div>
+                </details>
+                <details className="faculty-contact-details">
+                  <summary>Общие контакты юрфака</summary>
+                  <div className="coursework-department-content">
+                    <a href={`tel:${facultyContacts.deaneryPhone}`}>
+                      Деканат: {facultyContacts.deaneryPhone}
+                    </a>
+                    <a href={`tel:${facultyContacts.receptionPhone}`}>
+                      Приемная: {facultyContacts.receptionPhone}
+                    </a>
+                    <a href={`mailto:${facultyContacts.email}`}>
+                      {facultyContacts.email}
+                    </a>
+                    <Text>{facultyContacts.address}</Text>
+                  </div>
                 </details>
                 <div className="coursework-guide-link">
                   <Text className="session-overview-note">
