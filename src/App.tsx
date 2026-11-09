@@ -532,6 +532,108 @@ function App() {
                   </Text>
                 )}
               </article>
+
+              <article className="session-overview-item practice-overview">
+                <div className="session-overview-item-heading">
+                  <Title level={3}>Практики</Title>
+                </div>
+                <div className="practice-periods">
+                  <div className="practice-period">
+                    <Text strong>Правоприменительная</Text>
+                    <Text>1-13 февраля 2027</Text>
+                  </div>
+                  <div className="practice-period">
+                    <Text strong>Профессионально-ориентированная</Text>
+                    <Text>15-27 февраля 2027</Text>
+                  </div>
+                </div>
+                <div className="practice-shared-info">
+                  <div className="practice-requirement-block">
+                    <Tag color="gold">Документы подать до 4 декабря 2026</Tag>
+                    <ul className="practice-requirements">
+                      <li>Отдельное заявление на каждый вид практики.</li>
+                      <li>
+                        Гарантийное письмо от организации; если обе практики
+                        проходят в одной организации, достаточно одного письма.
+                      </li>
+                      <li>
+                        При прохождении по месту работы нужна справка с места
+                        работы о занимаемой должности.
+                      </li>
+                    </ul>
+                    <Text className="session-overview-note">
+                      Объявление рекомендует выбрать одну организацию для обеих практик.
+                    </Text>
+                  </div>
+                  <div className="practice-materials">
+                    <Text className="practice-materials-heading">Образцы заявлений</Text>
+                    <a
+                      className="practice-material-link"
+                      download
+                      href="/materials/practice/application-law-enforcement-practice.doc"
+                    >
+                      <FileTextOutlined />
+                      <span>Правоприменительная практика</span>
+                      <Text className="material-format">DOC</Text>
+                      <DownloadOutlined />
+                    </a>
+                    <a
+                      className="practice-material-link"
+                      download
+                      href="/materials/practice/application-professional-oriented-practice.doc"
+                    >
+                      <FileTextOutlined />
+                      <span>Профессионально-ориентированная практика</span>
+                      <Text className="material-format">DOC</Text>
+                      <DownloadOutlined />
+                    </a>
+                    <a
+                      className="practice-material-link practice-combined-form"
+                      download
+                      href="/materials/practice/application-both-practices.doc"
+                    >
+                      <FileTextOutlined />
+                      <span>Объединенное заявление на обе практики</span>
+                      <Text className="material-format">DOC</Text>
+                      <DownloadOutlined />
+                    </a>
+                    <Text className="practice-form-caution">
+                      Объединенную форму использовать только после согласования
+                      с деканатом; объявление требует отдельное заявление на каждый
+                      вид практики.
+                    </Text>
+                    <div className="practice-material-group">
+                      <Text className="practice-materials-heading">
+                        Образцы гарантийных писем
+                      </Text>
+                      <a
+                        className="practice-material-link"
+                        download
+                        href="/materials/practice/guarantee-law-enforcement-practice.docx"
+                      >
+                        <FileTextOutlined />
+                        <span>Для правоприменительной практики, 1-13 февраля</span>
+                        <Text className="material-format">DOCX</Text>
+                        <DownloadOutlined />
+                      </a>
+                      <a
+                        className="practice-material-link"
+                        download
+                        href="/materials/practice/guarantee-both-practices.docx"
+                      >
+                        <FileTextOutlined />
+                        <span>Для обеих практик, 1-27 февраля</span>
+                        <Text className="material-format">DOCX</Text>
+                        <DownloadOutlined />
+                      </a>
+                      <Text className="practice-form-caution">
+                        Второй шаблон назван учебным, но в тексте охватывает
+                        правоприменительную и профессионально-ориентированную практики.
+                      </Text>
+                    </div>
+                  </div>
+                </div>
+              </article>
             </div>
           </section>
         )}

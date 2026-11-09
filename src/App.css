@@ -456,6 +456,114 @@ button.calendar-day {
   line-height: 1.5;
 }
 
+.practice-periods {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.practice-overview {
+  grid-column: 1 / -1;
+}
+
+.practice-period {
+  display: grid;
+  gap: 3px;
+  padding: 9px 10px;
+  border-left: 3px solid #6c9471;
+  background: #f5f8f2;
+  color: #526357;
+  font-size: 12px;
+}
+
+.practice-period .ant-typography-strong {
+  color: #354b3c;
+}
+
+.practice-requirements {
+  display: grid;
+  gap: 6px;
+  margin: 4px 0 0;
+  padding-left: 18px;
+  color: #64736a;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.practice-shared-info {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  gap: 24px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #edf0ec;
+}
+
+.practice-requirement-block {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 8px;
+}
+
+.practice-requirement-block > .ant-tag {
+  margin: 0;
+  border-radius: 999px;
+}
+
+.practice-materials {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+}
+
+.practice-materials-heading {
+  color: #354b3c;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.practice-material-link {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 8px;
+  color: #2f6948;
+  font-size: 11px;
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+.practice-material-link:hover {
+  color: #1d5034;
+  text-decoration: underline;
+}
+
+.practice-material-link > span:first-of-type {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.practice-combined-form {
+  margin-top: 4px;
+  padding-top: 9px;
+  border-top: 1px solid #edf0ec;
+}
+
+.practice-material-group {
+  display: grid;
+  gap: 9px;
+  margin-top: 5px;
+  padding-top: 12px;
+  border-top: 1px solid #edf0ec;
+}
+
+.practice-form-caution {
+  color: #9a6b24;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
 .coursework-chairs {
   margin-top: 10px;
   border: 1px solid #e8ece6;
@@ -1183,6 +1291,11 @@ button.calendar-day {
   .session-overview-grid {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+
+  .practice-periods,
+  .practice-shared-info {
+    grid-template-columns: 1fr;
   }
 
   .upcoming-events-heading {
