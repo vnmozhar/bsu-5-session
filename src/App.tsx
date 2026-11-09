@@ -462,9 +462,19 @@ function App() {
                     </li>
                   </ul>
                 </details>
-                <Text className="session-overview-note">
-                  Требования по оформлению курсовых и дипломных: ссылка на актуальную методичку не добавлена.
-                </Text>
+                <div className="coursework-guide-link">
+                  <Text className="session-overview-note">
+                    Оформление курсовых работ
+                  </Text>
+                  <a
+                    className="detail-link"
+                    href="/materials/bsu-coursework-guidelines-2024.pdf"
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    Методические рекомендации юрфака БГУ, 2024 (PDF)
+                  </a>
+                </div>
               </article>
 
               <article className="session-overview-item">

@@ -490,6 +490,12 @@ button.calendar-day {
   line-height: 1.5;
 }
 
+.coursework-guide-link {
+  display: grid;
+  gap: 5px;
+  margin-top: 10px;
+}
+
 .control-work-details {
   margin-top: 6px;
   border: 1px solid #e8ece6;
