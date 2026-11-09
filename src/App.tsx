@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
+  ArrowLeftOutlined,
+  ArrowRightOutlined,
   BookOutlined,
   CalendarOutlined,
   DownloadOutlined,
@@ -29,6 +31,11 @@ const { Paragraph, Text, Title } = Typography
 function App() {
   const [query, setQuery] = useState('')
   const normalizedQuery = query.trim().toLocaleLowerCase('ru')
+  const currentPath = window.location.pathname.replace(/\/+$/, '') || '/'
+  const isSubjectPath = currentPath.startsWith('/subjects/')
+  const selectedSubject = publicSubjects.find(
+    (subject) => currentPath === `/subjects/${subject.id}`,
+  )
 
   const filteredSubjects = useMemo(
     () =>
@@ -68,7 +75,7 @@ function App() {
       }}
     >
       <main className="dashboard">
-        <section className="hero">
+        {!isSubjectPath && <section className="hero">
           <div className="hero-content">
             <Tag className="eyebrow">
               <BookOutlined /> Учебная навигация
@@ -87,9 +94,9 @@ function App() {
           <div className="hero-mark" aria-hidden="true">
             <BookOutlined />
           </div>
-        </section>
+        </section>}
 
-        <section className="schedule-panel" aria-labelledby="schedule-title">
+        {!isSubjectPath && <section className="schedule-panel" aria-labelledby="schedule-title">
           <div className="schedule-heading">
             <div className="schedule-title-wrap">
               <span className="schedule-icon">
@@ -122,41 +129,74 @@ function App() {
               </Col>
             ))}
           </Row>
-        </section>
+        </section>}
 
         <section className="subjects-section" aria-labelledby="subjects-title">
           <div className="section-heading">
-            <div>
-              <Text className="section-kicker">ОБЗОР</Text>
-              <Title id="subjects-title" level={2}>
-                Учебные предметы
-              </Title>
-              <Text type="secondary">
-                {publicSubjects.length} дисциплин
-              </Text>
-            </div>
-            <Input
-              allowClear
-              aria-label="Поиск по предметам, преподавателям и информации курса"
-              className="subject-search"
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Найти предмет, преподавателя или тему"
-              prefix={<SearchOutlined />}
-              value={query}
-            />
+            {selectedSubject ? (
+              <div className="subject-page-heading">
+                <a className="back-link" href="/">
+                  <ArrowLeftOutlined /> Все предметы
+                </a>
+                <Text className="section-kicker">СТРАНИЦА ПРЕДМЕТА</Text>
+                <Title id="subjects-title" level={2}>
+                  {selectedSubject.name}
+                </Title>
+                <Text type="secondary">Информация о курсе и материалы</Text>
+              </div>
+            ) : isSubjectPath ? (
+              <div className="subject-page-heading">
+                <a className="back-link" href="/">
+                  <ArrowLeftOutlined /> Все предметы
+                </a>
+                <Title id="subjects-title" level={2}>
+                  Предмет не найден
+                </Title>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <Text className="section-kicker">ОБЗОР</Text>
+                  <Title id="subjects-title" level={2}>
+                    Учебные предметы
+                  </Title>
+                  <Text type="secondary">{publicSubjects.length} дисциплин</Text>
+                </div>
+                <Input
+                  allowClear
+                  aria-label="Поиск по предметам, преподавателям и информации курса"
+                  className="subject-search"
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Найти предмет, преподавателя или тему"
+                  prefix={<SearchOutlined />}
+                  value={query}
+                />
+              </>
+            )}
           </div>
 
-          {filteredSubjects.length > 0 ? (
+          {isSubjectPath && !selectedSubject ? (
+            <Empty description="Проверьте ссылку на предмет" />
+          ) : (selectedSubject ? [selectedSubject] : filteredSubjects).length > 0 ? (
             <Row gutter={[20, 20]} align="stretch">
-              {filteredSubjects.map((subject) => (
-                <Col key={subject.id} xs={24} sm={12} xl={8}>
-                  <Card className="subject-card" variant="borderless">
+              {(selectedSubject ? [selectedSubject] : filteredSubjects).map((subject) => (
+                <Col key={subject.id} xs={24} sm={selectedSubject ? 24 : 12} xl={selectedSubject ? 24 : 8}>
+                  <Card
+                    className={`subject-card${selectedSubject ? ' subject-detail-card' : ''}`}
+                    variant="borderless"
+                  >
                     <div className="subject-card-heading">
                       <div className="subject-icon">
                         <BookOutlined />
                       </div>
                       <Tag className="subject-tag">Предмет</Tag>
                     </div>
+
+                    {!selectedSubject && (
+                      <a className="subject-page-link" href={`/subjects/${subject.id}`}>
+                        Страница предмета <ArrowRightOutlined />
+                      </a>
+                    )}
 
                     <Title className="subject-title" level={3}>
                       {subject.name}
@@ -275,7 +315,9 @@ function App() {
                         <details className="detail-accordion">
                           <summary>
                             {subject.topicListTitle ??
-                              `Вопросы и темы (${subject.topicItems.length})`}
+                              (subject.topicItems.length > 0
+                                ? `Вопросы и темы (${subject.topicItems.length})`
+                                : `Тематические блоки (${subject.topicGroups.length})`)}
                           </summary>
                           <div className="accordion-content">
                             {subject.topicGroups.map((group) => (
@@ -375,7 +417,7 @@ function App() {
           )}
         </section>
 
-        <footer className="dashboard-footer">
+        {!isSubjectPath && <footer className="dashboard-footer">
           <Space size={8}>
             <span className="footer-mark" />
             <Text type="secondary">
@@ -384,7 +426,7 @@ function App() {
               требуют сверки с официальным расписанием.
             </Text>
           </Space>
-        </footer>
+        </footer>}
       </main>
     </ConfigProvider>
   )
