@@ -1,0 +1,526 @@
+.dashboard {
+  width: min(1240px, 100%);
+  margin: 0 auto;
+  padding: 32px 32px 24px;
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  min-height: 280px;
+  align-items: center;
+  overflow: hidden;
+  padding: 44px 52px;
+  border-radius: 28px;
+  background:
+    radial-gradient(ellipse at 88% 16%, rgb(148 180 147 / 30%), transparent 32%),
+    linear-gradient(118deg, #193d31 0%, #285a47 58%, #39725a 100%);
+  color: #fff;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 660px;
+}
+
+.eyebrow.ant-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 6px 12px;
+  border: 1px solid rgb(255 255 255 / 24%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 10%);
+  color: #e7f2e7;
+  font-size: 13px;
+}
+
+.hero h1.ant-typography {
+  margin: 0 0 12px;
+  color: #fff;
+  font-size: clamp(36px, 5vw, 52px);
+  font-weight: 650;
+  letter-spacing: -1.7px;
+  line-height: 1.08;
+}
+
+.hero-description.ant-typography {
+  max-width: 590px;
+  margin-bottom: 20px;
+  color: rgb(255 255 255 / 82%);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #d7e8da;
+  font-size: 13px;
+}
+
+.hero-dot,
+.footer-mark {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #a9d392;
+}
+
+.hero-mark {
+  position: absolute;
+  right: 7%;
+  display: grid;
+  width: 220px;
+  height: 220px;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 50%;
+  color: rgb(255 255 255 / 14%);
+  font-size: 94px;
+  transform: rotate(-12deg);
+}
+
+.hero-mark::before,
+.hero-mark::after {
+  position: absolute;
+  border: 1px solid rgb(255 255 255 / 11%);
+  border-radius: 50%;
+  content: "";
+}
+
+.hero-mark::before {
+  inset: 18px;
+}
+
+.hero-mark::after {
+  inset: -18px;
+}
+
+.schedule-panel {
+  margin-top: 24px;
+  padding: 26px;
+  border: 1px solid #ece8d8;
+  border-radius: 22px;
+  background: #fffefa;
+}
+
+.schedule-heading,
+.schedule-title-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.schedule-heading {
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.schedule-title-wrap {
+  gap: 14px;
+}
+
+.schedule-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 14px;
+  background: #f7f0d9;
+  color: #876e24;
+  font-size: 18px;
+}
+
+.schedule-heading .section-kicker {
+  margin-bottom: 2px;
+  color: #8c7c4c;
+}
+
+.schedule-heading h2.ant-typography {
+  margin: 0;
+  color: #3a392f;
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.schedule-heading .ant-tag {
+  margin: 0;
+  border-radius: 999px;
+}
+
+.schedule-alert.ant-alert {
+  margin-bottom: 14px;
+  border: 1px solid #f1e4b7;
+  border-radius: 13px;
+  background: #fff9e8;
+}
+
+.schedule-alert .ant-alert-message {
+  color: #5b4b1f;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.schedule-alert .ant-alert-description {
+  color: #786b49;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.schedule-dates {
+  margin-top: 0;
+}
+
+.schedule-date {
+  display: grid;
+  min-height: 112px;
+  align-content: start;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid #eeeade;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.schedule-date-value {
+  color: #353a30;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.schedule-date-kind {
+  color: #8b762f;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.schedule-date-detail {
+  color: #7d8277;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.subjects-section {
+  padding: 48px 0 28px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.section-kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: #728078;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.section-heading h2.ant-typography {
+  margin: 0 0 4px;
+  color: #1e3028;
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -0.7px;
+}
+
+.subject-search {
+  width: min(360px, 100%);
+  height: 44px;
+  border-color: #e4e9e2;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.subject-search .ant-input-prefix {
+  margin-inline-end: 10px;
+  color: #77877d;
+}
+
+.subject-card.ant-card {
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid #e9ede7;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 6px 22px rgb(34 55 42 / 4%);
+  transition:
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.subject-card.ant-card:hover {
+  box-shadow: 0 12px 30px rgb(34 55 42 / 9%);
+  transform: translateY(-2px);
+}
+
+.subject-card .ant-card-body {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  padding: 22px;
+}
+
+.subject-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.subject-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 13px;
+  background: #edf4ed;
+  color: #347051;
+  font-size: 18px;
+}
+
+.subject-tag.ant-tag {
+  margin: 0;
+  padding: 3px 9px;
+  border: 0;
+  border-radius: 999px;
+  background: #f1f4ef;
+  color: #67766c;
+  font-size: 11px;
+}
+
+.subject-title.ant-typography {
+  min-height: 52px;
+  margin: 0 0 10px;
+  color: #21362b;
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.assessment-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  color: #64736a;
+  font-size: 12px;
+}
+
+.assessment-info .ant-tag {
+  margin: 0;
+  border-radius: 999px;
+  font-size: 11px;
+}
+
+.assessment-source {
+  color: #8a948c;
+  font-size: 10px;
+}
+
+.subject-facts {
+  display: grid;
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid #edf0ec;
+  border-bottom: 1px solid #edf0ec;
+}
+
+.subject-facts > div {
+  display: grid;
+  gap: 3px;
+}
+
+.fact-label {
+  color: #879189;
+  font-size: 11px;
+}
+
+.fact-value {
+  color: #34493c;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.instructor-position {
+  color: #79867d;
+  font-size: 12px;
+}
+
+.subject-sections {
+  display: grid;
+  flex: 1;
+  align-content: start;
+  gap: 18px;
+  padding-top: 18px;
+}
+
+.course-note {
+  display: grid;
+  gap: 5px;
+  padding: 10px 11px;
+  border-radius: 11px;
+  background: #f6f8f4;
+}
+
+.course-note-text.ant-typography {
+  margin: 0;
+  color: #526357;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.course-note-source,
+.course-note-caution {
+  color: #839087;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.course-note-caution {
+  color: #9a6b24;
+  font-weight: 600;
+}
+
+.detail-section {
+  display: grid;
+  gap: 8px;
+}
+
+.detail-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #3a7152;
+  font-size: 13px;
+}
+
+.detail-heading .ant-typography {
+  color: #334a3c;
+  font-size: 13px;
+}
+
+.detail-link,
+.empty-detail {
+  padding-left: 22px;
+  color: #77847a;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.detail-link {
+  color: #2f6948;
+  text-decoration: none;
+}
+
+.detail-link:hover {
+  text-decoration: underline;
+}
+
+.comment {
+  margin: 0;
+  padding-left: 22px;
+  color: #67756b;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.empty-search {
+  padding: 48px 0;
+  border: 1px dashed #dce4dc;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.dashboard-footer {
+  display: flex;
+  justify-content: center;
+  padding: 22px 0 4px;
+  border-top: 1px solid #e6ebe4;
+  text-align: center;
+}
+
+.dashboard-footer .ant-typography {
+  font-size: 12px;
+}
+
+.footer-mark {
+  width: 7px;
+  height: 7px;
+  background: #75a878;
+}
+
+@media (max-width: 700px) {
+  .dashboard {
+    padding: 16px 16px 20px;
+  }
+
+  .hero {
+    min-height: 260px;
+    padding: 32px 26px;
+    border-radius: 22px;
+  }
+
+  .hero-mark {
+    right: -72px;
+    bottom: -82px;
+    width: 190px;
+    height: 190px;
+    font-size: 76px;
+  }
+
+  .hero-description.ant-typography {
+    max-width: 460px;
+    font-size: 14px;
+  }
+
+  .subjects-section {
+    padding-top: 34px;
+  }
+
+  .schedule-panel {
+    margin-top: 16px;
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+
+  .schedule-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .section-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .section-heading h2.ant-typography {
+    font-size: 24px;
+  }
+
+  .subject-search {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
