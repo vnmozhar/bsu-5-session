@@ -387,7 +387,7 @@ export const publicSubjects: readonly PublicSubject[] = [
       'Имеющиеся нормативные акты тематически покрывают значительную часть специальных отраслевых вопросов, но связь каждого акта с конкретными экзаменационными вопросами еще не проверена.',
       'План семинаров старше текущего учебного года, поэтому его нельзя без подтверждения считать действующим календарным планом.',
     ],
-    portalUrl: null,
+    portalUrl: 'https://edulaw.bsu.by/course/view.php?id=419',
     materials: [
       {
         title: 'Аграрное право',
@@ -575,7 +575,7 @@ export const publicSubjects: readonly PublicSubject[] = [
       'Пока нет списка вопросов или официального описания формата, по которому можно было бы составить надежную карту экзамена.',
       'Имеющиеся материалы по несовершеннолетним можно считать отдельным учебным блоком, но не подтвержденным приоритетом курса.',
     ],
-    portalUrl: null,
+    portalUrl: 'https://edulaw.bsu.by/course/view.php?id=431',
     materials: [
       {
         title: 'Судовы веснік, 2016, № 1: материалы о несовершеннолетних',
@@ -598,7 +598,12 @@ export const publicSubjects: readonly PublicSubject[] = [
         href: '/materials/criminal-procedure/control-work-guidelines.doc',
       },
     ],
-    links: [],
+    links: [
+      {
+        title: 'Учебный портал БГУ: контрольная работа по уголовному процессу',
+        url: 'https://edulaw.bsu.by/course/view.php?id=388',
+      },
+    ],
     comments: [],
   },
   {
@@ -641,7 +646,7 @@ export const publicSubjects: readonly PublicSubject[] = [
       'Без списка вопросов и самих материалов портала определить объем подготовки по курсу нельзя.',
       'Упоминание даты постановления недостаточно для правового анализа без номера, названия и темы.',
     ],
-    portalUrl: null,
+    portalUrl: 'https://edulaw.bsu.by/course/view.php?id=347',
     links: [],
     comments: [],
   },

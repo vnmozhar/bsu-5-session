@@ -889,7 +889,7 @@ function App() {
                             rel="noreferrer"
                             target="_blank"
                           >
-                            Учебный портал
+                            Учебный портал БГУ
                           </a>
                         )}
                         {subject.links.map((link) => (
