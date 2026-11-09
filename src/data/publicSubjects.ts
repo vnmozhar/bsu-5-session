@@ -66,13 +66,20 @@ export const preliminarySchedule = [
   },
 ] as const
 
+export const sessionRange = {
+  start: '2026-11-16',
+  end: '2026-12-05',
+} as const
+
 export interface OfficialScheduleEntry {
+  subjectId: string
   date: string
   time: string
-  kind: 'Зачет' | 'Экзамен'
+  kind: 'Лекция' | 'Практическое занятие' | 'Зачет' | 'Экзамен'
   subject: string
   group: string
   location: string
+  preparation: string
 }
 
 export const officialSchedule: readonly OfficialScheduleEntry[] = []

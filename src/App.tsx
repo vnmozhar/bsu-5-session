@@ -27,16 +27,33 @@ import {
   officialSchedule,
   preliminarySchedule,
   publicSubjects,
+  sessionRange,
 } from './data/publicSubjects'
 import './App.css'
 
 const { Paragraph, Text, Title } = Typography
 const weekdayLabels = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
 
+interface CalendarEvent {
+  date: string
+  kind: string
+  detail: string
+}
+
 function parseScheduleDate(date: string) {
   const [year, month, day] = date.split('-').map(Number)
   return new Date(year, month - 1, day)
 }
+
+function toLocalISODate(date: Date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-')
+}
+
+const today = toLocalISODate(new Date())
 
 function formatScheduleDate(date: string) {
   return parseScheduleDate(date).toLocaleDateString('ru-RU', {
@@ -44,6 +61,103 @@ function formatScheduleDate(date: string) {
     month: 'long',
     year: 'numeric',
   })
+}
+
+function getSessionMonthKeys() {
+  const start = parseScheduleDate(sessionRange.start)
+  const end = parseScheduleDate(sessionRange.end)
+  const months: string[] = []
+
+  for (
+    const month = new Date(start.getFullYear(), start.getMonth(), 1);
+    month <= end;
+    month.setMonth(month.getMonth() + 1)
+  ) {
+    months.push(`${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`)
+  }
+
+  return months
+}
+
+function CalendarGrid({
+  events,
+  selectedDate,
+  onSelectDate,
+}: {
+  events: readonly CalendarEvent[]
+  selectedDate: string
+  onSelectDate: (date: string) => void
+}) {
+  const months = getSessionMonthKeys().map((monthKey) => {
+    const [year, month] = monthKey.split('-').map(Number)
+    const firstDay = new Date(year, month - 1, 1)
+    const startOffset = (firstDay.getDay() + 6) % 7
+    const dayCount = new Date(year, month, 0).getDate()
+
+    return {
+      key: monthKey,
+      title: firstDay.toLocaleDateString('ru-RU', {
+        month: 'long',
+        year: 'numeric',
+      }),
+      days: [
+        ...Array.from({ length: startOffset }, () => null),
+        ...Array.from({ length: dayCount }, (_, index) => index + 1),
+      ],
+    }
+  })
+
+  return (
+    <div className="calendar-months">
+      {months.map((month) => (
+        <section
+          aria-label={`Календарь: ${month.title}`}
+          className="calendar-month"
+          key={month.key}
+        >
+          <Title level={3}>{month.title}</Title>
+          <div className="calendar-grid calendar-weekdays">
+            {weekdayLabels.map((weekday) => (
+              <Text key={weekday}>{weekday}</Text>
+            ))}
+          </div>
+          <div className="calendar-grid calendar-days">
+            {month.days.map((day, index) => {
+              if (day === null) {
+                return <span aria-hidden="true" key={`blank-${index}`} />
+              }
+
+              const date = `${month.key}-${String(day).padStart(2, '0')}`
+              if (date < sessionRange.start || date > sessionRange.end) {
+                return <span aria-hidden="true" key={date} />
+              }
+
+              const dayEvents = events.filter((event) => event.date === date)
+
+              return dayEvents.length > 0 ? (
+                <button
+                  aria-label={`${formatScheduleDate(date)}: ${dayEvents.map((event) => event.kind).join(', ')}`}
+                  aria-pressed={selectedDate === date}
+                  className={`calendar-day calendar-event-day${selectedDate === date ? ' is-selected' : ''}`}
+                  key={date}
+                  onClick={() => onSelectDate(date)}
+                  title={dayEvents.map((event) => event.detail).join('; ')}
+                  type="button"
+                >
+                  <span>{day}</span>
+                  <span className="calendar-event-marker" />
+                </button>
+              ) : (
+                <span className="calendar-day" key={date}>
+                  {day}
+                </span>
+              )
+            })}
+          </div>
+        </section>
+      ))}
+    </div>
+  )
 }
 
 function App() {
@@ -63,31 +177,31 @@ function App() {
         detail: `${event.time} · ${event.subject} · ${event.group} · ${event.location}`,
       }))
     : preliminarySchedule
-  const [selectedDate, setSelectedDate] = useState(
-    calendarEvents[0]?.date ?? '',
+  const sortedCalendarEvents = [...calendarEvents].sort((first, second) =>
+    first.date.localeCompare(second.date),
   )
-  const calendarMonths = Array.from(
-    new Set(calendarEvents.map((event) => event.date.slice(0, 7))),
-  ).map((monthKey) => {
-    const [year, month] = monthKey.split('-').map(Number)
-    const firstDay = new Date(year, month - 1, 1)
-    const startOffset = (firstDay.getDay() + 6) % 7
-    const dayCount = new Date(year, month, 0).getDate()
-
-    return {
-      key: monthKey,
-      title: firstDay.toLocaleDateString('ru-RU', {
-        month: 'long',
-        year: 'numeric',
-      }),
-      days: [
-        ...Array.from({ length: startOffset }, () => null),
-        ...Array.from({ length: dayCount }, (_, index) => index + 1),
-      ],
-    }
-  })
+  const upcomingEvents = sortedCalendarEvents
+    .filter((event) => event.date >= today)
+    .slice(0, 5)
+  const [selectedDate, setSelectedDate] = useState(
+    upcomingEvents[0]?.date ?? sortedCalendarEvents[0]?.date ?? '',
+  )
   const selectedEvents = calendarEvents.filter(
     (event) => event.date === selectedDate,
+  )
+  const subjectSchedule = selectedSubject
+    ? officialSchedule.filter((event) => event.subjectId === selectedSubject.id)
+    : []
+  const subjectCalendarEvents: CalendarEvent[] = subjectSchedule.map((event) => ({
+    date: event.date,
+    kind: event.kind,
+    detail: `${event.time} · ${event.subject}`,
+  }))
+  const [selectedSubjectDate, setSelectedSubjectDate] = useState(
+    subjectSchedule[0]?.date ?? '',
+  )
+  const selectedSubjectEvents = subjectSchedule.filter(
+    (event) => event.date === selectedSubjectDate,
   )
 
   const filteredSubjects = useMemo(
@@ -167,11 +281,9 @@ function App() {
                 <Tag color={hasOfficialSchedule ? 'green' : 'gold'}>
                   {hasOfficialSchedule ? 'Опубликовано' : 'Предварительно'}
                 </Tag>
-                {hasOfficialSchedule && (
-                  <a className="schedule-full-link" href="/schedule">
-                    Полное расписание <ArrowRightOutlined />
-                  </a>
-                )}
+                <a className="schedule-full-link" href="/schedule">
+                  Открыть календарь сессии <ArrowRightOutlined />
+                </a>
               </div>
             </div>
             <Alert
@@ -189,54 +301,16 @@ function App() {
               showIcon
               type={hasOfficialSchedule ? 'success' : 'warning'}
             />
+            <Text className="session-range">
+              Сессия: с {formatScheduleDate(sessionRange.start)} по{' '}
+              {formatScheduleDate(sessionRange.end)}
+            </Text>
             <div className="calendar-layout">
-              <div className="calendar-months">
-                {calendarMonths.map((month) => (
-                  <section
-                    aria-label={`Календарь: ${month.title}`}
-                    className="calendar-month"
-                    key={month.key}
-                  >
-                    <Title level={3}>{month.title}</Title>
-                    <div className="calendar-grid calendar-weekdays">
-                      {weekdayLabels.map((weekday) => (
-                        <Text key={weekday}>{weekday}</Text>
-                      ))}
-                    </div>
-                    <div className="calendar-grid calendar-days">
-                      {month.days.map((day, index) => {
-                        if (day === null) {
-                          return <span aria-hidden="true" key={`blank-${index}`} />
-                        }
-
-                        const date = `${month.key}-${String(day).padStart(2, '0')}`
-                        const events = calendarEvents.filter(
-                          (event) => event.date === date,
-                        )
-
-                        return events.length > 0 ? (
-                          <button
-                            aria-label={`${formatScheduleDate(date)}: ${events.map((event) => event.kind).join(', ')}`}
-                            aria-pressed={selectedDate === date}
-                            className={`calendar-day calendar-event-day${selectedDate === date ? ' is-selected' : ''}`}
-                            key={date}
-                            onClick={() => setSelectedDate(date)}
-                            title={events.map((event) => event.detail).join('; ')}
-                            type="button"
-                          >
-                            <span>{day}</span>
-                            <span className="calendar-event-marker" />
-                          </button>
-                        ) : (
-                          <span className="calendar-day" key={date}>
-                            {day}
-                          </span>
-                        )
-                      })}
-                    </div>
-                  </section>
-                ))}
-              </div>
+              <CalendarGrid
+                events={calendarEvents}
+                onSelectDate={setSelectedDate}
+                selectedDate={selectedDate}
+              />
               <aside aria-live="polite" className="calendar-selection">
                 <Text className="section-kicker">ВЫБРАННАЯ ДАТА</Text>
                 {selectedDate ? (
@@ -254,6 +328,38 @@ function App() {
                 )}
               </aside>
             </div>
+            <section aria-labelledby="upcoming-events-title" className="upcoming-events">
+              <div className="upcoming-events-heading">
+                <div>
+                  <Text className="section-kicker">БЛИЖАЙШИЕ ДАТЫ</Text>
+                  <Title id="upcoming-events-title" level={3}>
+                    До пяти следующих событий
+                  </Title>
+                </div>
+                <Text type="secondary">Выберите событие, чтобы увидеть его в календаре</Text>
+              </div>
+              {upcomingEvents.length > 0 ? (
+                <div className="upcoming-events-list">
+                  {upcomingEvents.map((event) => (
+                    <button
+                      aria-pressed={selectedDate === event.date}
+                      className={`upcoming-event${selectedDate === event.date ? ' is-selected' : ''}`}
+                      key={`${event.date}-${event.kind}-${event.detail}`}
+                      onClick={() => setSelectedDate(event.date)}
+                      type="button"
+                    >
+                      <Text className="upcoming-event-date">
+                        {formatScheduleDate(event.date)}
+                      </Text>
+                      <Text className="schedule-date-kind">{event.kind}</Text>
+                      <Text className="schedule-date-detail">{event.detail}</Text>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <Text className="empty-detail">Ближайших событий нет</Text>
+              )}
+            </section>
           </section>
         )}
 
@@ -266,6 +372,33 @@ function App() {
             <Title id="expanded-schedule-title" level={2}>
               Полное расписание
             </Title>
+            <Text className="session-range">
+              Сессия: с {formatScheduleDate(sessionRange.start)} по{' '}
+              {formatScheduleDate(sessionRange.end)}
+            </Text>
+            <div className="calendar-layout expanded-calendar-layout">
+              <CalendarGrid
+                events={calendarEvents}
+                onSelectDate={setSelectedDate}
+                selectedDate={selectedDate}
+              />
+              <aside aria-live="polite" className="calendar-selection">
+                <Text className="section-kicker">ВЫБРАННАЯ ДАТА</Text>
+                {selectedDate ? (
+                  <>
+                    <Title level={3}>{formatScheduleDate(selectedDate)}</Title>
+                    {selectedEvents.map((event) => (
+                      <div className="calendar-event-detail" key={`${event.date}-${event.kind}-${event.detail}`}>
+                        <Text className="schedule-date-kind">{event.kind}</Text>
+                        <Text className="schedule-date-detail">{event.detail}</Text>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <Text>Даты пока не указаны</Text>
+                )}
+              </aside>
+            </div>
             {hasOfficialSchedule ? (
               <div className="official-schedule-list">
                 {officialSchedule.map((event) => (
@@ -352,12 +485,6 @@ function App() {
                       <Tag className="subject-tag">Предмет</Tag>
                     </div>
 
-                    {!selectedSubject && (
-                      <a className="subject-page-link" href={`/subjects/${subject.id}`}>
-                        Страница предмета <ArrowRightOutlined />
-                      </a>
-                    )}
-
                     <Title className="subject-title" level={3}>
                       {subject.name}
                     </Title>
@@ -387,7 +514,74 @@ function App() {
                       </div>
                     </div>
 
-                    <div className="subject-sections">
+                    {selectedSubject && (
+                      <section
+                        aria-labelledby="subject-schedule-title"
+                        className="subject-schedule-section"
+                      >
+                        <div className="subject-schedule-heading">
+                          <div>
+                            <Text className="section-kicker">РАСПИСАНИЕ ПРЕДМЕТА</Text>
+                            <Title id="subject-schedule-title" level={3}>
+                              Занятия и аттестация
+                            </Title>
+                          </div>
+                          <CalendarOutlined />
+                        </div>
+                        {subjectSchedule.length > 0 ? (
+                          <div className="subject-calendar-layout">
+                            <CalendarGrid
+                              events={subjectCalendarEvents}
+                              onSelectDate={setSelectedSubjectDate}
+                              selectedDate={selectedSubjectDate}
+                            />
+                            <div className="subject-schedule-list">
+                              {selectedSubjectEvents.map((event) => (
+                                <article
+                                  className="subject-schedule-event"
+                                  key={`${event.date}-${event.time}-${event.kind}`}
+                                >
+                                  <div className="subject-event-meta">
+                                    <Text className="schedule-date-value">
+                                      {formatScheduleDate(event.date)}
+                                    </Text>
+                                    <Tag color={event.kind === 'Экзамен' || event.kind === 'Зачет' ? 'gold' : 'green'}>
+                                      {event.kind}
+                                    </Tag>
+                                  </div>
+                                  <Text strong>{event.time}</Text>
+                                  <Text>{event.location}</Text>
+                                  <div className="subject-preparation">
+                                    <Text strong>Подготовить</Text>
+                                    <Text>{event.preparation}</Text>
+                                  </div>
+                                </article>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <Text className="empty-detail">
+                            Расписание занятий по этому предмету появится после публикации официального расписания.
+                          </Text>
+                        )}
+                      </section>
+                    )}
+
+                    {!selectedSubject && (
+                      <div className="subject-page-teaser">
+                        <Text className="subject-page-teaser-label">
+                          Дополнительная информация на странице предмета
+                        </Text>
+                        <Text className="subject-page-teaser-content">
+                          Материалы курса · темы · аналитика · расписание занятий
+                        </Text>
+                        <a className="subject-page-link" href={`/subjects/${subject.id}`}>
+                          Открыть страницу предмета <ArrowRightOutlined />
+                        </a>
+                      </div>
+                    )}
+
+                    {selectedSubject && <div className="subject-sections">
                       <section className="detail-section course-info">
                         <div className="detail-heading">
                           <BookOutlined />
@@ -564,7 +758,7 @@ function App() {
                           </Text>
                         )}
                       </section>
-                    </div>
+                    </div>}
                   </Card>
                 </Col>
               ))}
