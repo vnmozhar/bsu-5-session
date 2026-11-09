@@ -321,21 +321,164 @@
 }
 
 .schedule-group-control {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 12px;
+  display: grid;
+  gap: 10px;
   margin: 12px 0 16px;
 }
 
-.schedule-group-control .section-kicker {
-  margin: 0;
-  color: #65736c;
+.schedule-group-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
 }
 
-.schedule-group-hint {
-  color: #65736c;
+.schedule-group-heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.schedule-group-heading .section-kicker {
+  margin: 0;
+  color: #53675a;
+}
+
+.schedule-group-instruction,
+.schedule-group-current {
+  color: #64736a;
+  font-size: 12px;
+}
+
+.schedule-group-current {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #315b40;
+  font-weight: 650;
+}
+
+.schedule-group-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.schedule-group-option {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 94px;
+  grid-template-columns: 38px minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  gap: 8px 10px;
+  padding: 12px;
+  border: 1px solid #dce4dc;
+  border-radius: 7px;
+  background: #fff;
+  color: #354a3b;
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.schedule-group-option:hover {
+  border-color: #8ca993;
+  background: #f7faf7;
+}
+
+.schedule-group-option:focus-within {
+  outline: 2px solid #6f9c79;
+  outline-offset: 2px;
+}
+
+.schedule-group-option.is-selected {
+  border-color: #285a47;
+  background: #285a47;
+  color: #fff;
+}
+
+.schedule-group-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.schedule-group-code {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid #dce4dc;
+  border-radius: 6px;
+  background: #f2f6f2;
+  color: #315b40;
   font-size: 11px;
+  font-weight: 750;
+}
+
+.schedule-group-option.is-selected .schedule-group-code {
+  border-color: rgb(255 255 255 / 28%);
+  background: rgb(255 255 255 / 12%);
+  color: #fff;
+}
+
+.schedule-group-option-copy {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.schedule-group-option-title {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: normal;
+}
+
+.schedule-group-option-detail {
+  grid-column: 1;
+  color: #758279;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.schedule-group-option.is-selected .schedule-group-option-detail {
+  color: #e0ebe2;
+}
+
+.schedule-group-choice-state {
+  grid-column: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #617267;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.schedule-group-option.is-selected .schedule-group-choice-state {
+  color: #fff;
+}
+
+@media (max-width: 700px) {
+  .schedule-group-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .schedule-group-option {
+    min-height: 0;
+    grid-template-columns: 38px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+  }
+
+  .schedule-group-choice-state {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+  }
 }
 
 .calendar-layout {

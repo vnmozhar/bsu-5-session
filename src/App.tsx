@@ -4,6 +4,7 @@ import {
   ArrowRightOutlined,
   BookOutlined,
   CalendarOutlined,
+  CheckCircleFilled,
   ClockCircleOutlined,
   DownloadOutlined,
   FileTextOutlined,
@@ -19,7 +20,6 @@ import {
   Empty,
   Input,
   Row,
-  Segmented,
   Space,
   Tag,
   Typography,
@@ -212,29 +212,64 @@ function ScheduleGroupSelector({
   selectedGroup: StudyGroup
   onChange: (group: StudyGroup) => void
 }) {
+  const groups = [
+    {
+      value: 'ОБЩ' as const,
+      title: 'Общий просмотр',
+      detail: 'Совместное расписание и информация',
+    },
+    {
+      value: 'СПС' as const,
+      title: 'Судебно-прокурорско-следственная деятельность',
+      detail: 'Расписание СПС и общие события',
+    },
+    {
+      value: 'ХОЗ' as const,
+      title: 'Хозяйственное право',
+      detail: 'Расписание ХОЗ и общие события',
+    },
+  ]
+  const selectedGroupTitle = groups.find((group) => group.value === selectedGroup)?.title
+
   return (
     <div className="schedule-group-control">
-      <Text className="section-kicker">УЧЕБНАЯ ГРУППА</Text>
-      <Segmented
-        aria-label="Учебная группа"
-        options={[
-          { label: 'ОБЩ', value: 'ОБЩ' },
-          {
-            label: <span title="Судебно-прокурорско-следственная деятельность">СПС</span>,
-            value: 'СПС',
-          },
-          { label: <span title="Хозяйственное право">ХОЗ</span>, value: 'ХОЗ' },
-        ]}
-        value={selectedGroup}
-        onChange={(value) => onChange(value as StudyGroup)}
-      />
-      <Text className="schedule-group-hint">
-        {selectedGroup === 'ОБЩ'
-          ? 'Совместное расписание и информация для СПС и ХОЗ'
-          : selectedGroup === 'СПС'
-            ? 'Расписание СПС и общая информация'
-            : 'Расписание ХОЗ и общая информация'}
-      </Text>
+      <div className="schedule-group-heading">
+        <div>
+          <Text className="section-kicker">ПОКАЗАТЬ РАСПИСАНИЕ ДЛЯ</Text>
+          <Text className="schedule-group-instruction">Выберите свою группу или общий просмотр</Text>
+        </div>
+        <Text className="schedule-group-current">
+          <CheckCircleFilled /> Сейчас выбрано: {selectedGroupTitle}
+        </Text>
+      </div>
+      <div aria-label="Учебная группа" className="schedule-group-options" role="radiogroup">
+        {groups.map((group) => {
+          const isSelected = group.value === selectedGroup
+
+          return (
+            <label
+              className={`schedule-group-option${isSelected ? ' is-selected' : ''}`}
+              key={group.value}
+            >
+              <input
+                checked={isSelected}
+                name="session-group"
+                onChange={() => onChange(group.value)}
+                type="radio"
+                value={group.value}
+              />
+              <span className="schedule-group-code">{group.value}</span>
+              <span className="schedule-group-option-copy">
+                <span className="schedule-group-option-title">{group.title}</span>
+                <span className="schedule-group-option-detail">{group.detail}</span>
+              </span>
+              <span aria-hidden="true" className="schedule-group-choice-state">
+                {isSelected ? <><CheckCircleFilled /> Выбрано</> : 'Выбрать'}
+              </span>
+            </label>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -468,6 +503,13 @@ function App() {
         </section>}
 
         {!isSubjectPath && !isSchedulePath && (
+          <ScheduleGroupSelector
+            onChange={handleGroupChange}
+            selectedGroup={selectedGroup}
+          />
+        )}
+
+        {!isSubjectPath && !isSchedulePath && (
           <section aria-labelledby="today-brief-title" className="today-brief">
             <div className="today-brief-heading">
               <Text className="section-kicker">СЕГОДНЯ · ГРУППА {selectedGroup}</Text>
@@ -574,10 +616,6 @@ function App() {
               Физически 5-я сессия (4 курс, 7 семестр): с {formatScheduleDate(sessionRange.start)} по{' '}
               {formatScheduleDate(sessionRange.end)}
             </Text>
-            <ScheduleGroupSelector
-              onChange={handleGroupChange}
-              selectedGroup={selectedGroup}
-            />
             <div className="calendar-layout">
               <CalendarGrid
                 events={visibleCalendarEvents}
