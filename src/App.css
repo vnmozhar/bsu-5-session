@@ -1289,6 +1289,22 @@ button.calendar-day {
   text-decoration: none;
 }
 
+.detail-link-item {
+  display: grid;
+  gap: 3px;
+  padding-left: 22px;
+}
+
+.detail-link-item .detail-link {
+  padding-left: 0;
+}
+
+.detail-link-note {
+  color: #77847a;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 .detail-link:hover {
   text-decoration: underline;
 }

@@ -883,25 +883,38 @@ function App() {
                           <Text strong>Полезные ссылки</Text>
                         </div>
                         {subject.portalUrl && (
-                          <a
-                            className="detail-link"
-                            href={subject.portalUrl}
-                            rel="noreferrer"
-                            target="_blank"
-                          >
-                            Учебный портал БГУ
-                          </a>
+                          <div className="detail-link-item">
+                            <a
+                              className="detail-link"
+                              href={subject.portalUrl}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              Учебный портал БГУ
+                            </a>
+                            {subject.portalNote && (
+                              <Text className="detail-link-note">
+                                {subject.portalNote}
+                              </Text>
+                            )}
+                          </div>
                         )}
                         {subject.links.map((link) => (
-                          <a
-                            className="detail-link"
-                            href={link.url}
-                            key={link.url}
-                            rel="noreferrer"
-                            target="_blank"
-                          >
-                            {link.title}
-                          </a>
+                          <div className="detail-link-item" key={link.url}>
+                            <a
+                              className="detail-link"
+                              href={link.url}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              {link.title}
+                            </a>
+                            {link.note && (
+                              <Text className="detail-link-note">
+                                {link.note}
+                              </Text>
+                            )}
+                          </div>
                         ))}
                         {!subject.portalUrl && subject.links.length === 0 && (
                           <Text className="empty-detail">
