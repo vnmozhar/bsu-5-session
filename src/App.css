@@ -394,6 +394,131 @@
   font-weight: 600;
 }
 
+.requirement-note {
+  display: grid;
+  gap: 7px;
+  padding: 10px 11px;
+  border: 1px solid #edf0ea;
+  border-radius: 11px;
+  background: #fbfcfa;
+}
+
+.requirement-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.requirement-heading .ant-tag {
+  margin: 0;
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 19px;
+}
+
+.detail-accordion {
+  overflow: hidden;
+  border: 1px solid #e9eee7;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.detail-accordion summary {
+  padding: 12px 13px;
+  color: #365441;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+  list-style-position: inside;
+}
+
+.detail-accordion summary:hover {
+  background: #f7f9f5;
+}
+
+.accordion-content {
+  display: grid;
+  gap: 11px;
+  padding: 0 13px 13px;
+}
+
+.topic-group {
+  display: grid;
+  gap: 4px;
+  color: #64736a;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.topic-group .ant-typography-strong {
+  color: #3a6048;
+}
+
+.topic-list {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 29px;
+  color: #64736a;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.material-entry {
+  display: grid;
+  gap: 5px;
+}
+
+.material-category {
+  color: #849087;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.material-link {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 8px;
+  color: #2f6948;
+  font-size: 12px;
+  line-height: 1.5;
+  text-decoration: none;
+}
+
+.material-link:hover {
+  color: #1d5034;
+  text-decoration: underline;
+}
+
+.material-link > span:first-of-type {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.material-format {
+  flex: 0 0 auto;
+  color: #88938a;
+  font-size: 10px;
+}
+
+.material-caution {
+  padding-left: 22px;
+  color: #9a6b24;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.analysis-note.ant-typography {
+  margin: 0;
+  padding-left: 10px;
+  border-left: 2px solid #c9d8c8;
+  color: #64736a;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
 .detail-section {
   display: grid;
   gap: 8px;

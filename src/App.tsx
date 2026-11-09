@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import {
   BookOutlined,
   CalendarOutlined,
+  DownloadOutlined,
+  FileTextOutlined,
   LinkOutlined,
   MessageOutlined,
   SearchOutlined,
@@ -39,6 +41,11 @@ function App() {
           subject.assessment.type,
           subject.assessment.format,
           ...subject.courseInfo.map((item) => item.text),
+          ...subject.requirements.map((item) => item.text),
+          ...subject.topicGroups.flatMap((item) => [item.title, item.detail]),
+          ...subject.topicItems,
+          ...(subject.materials ?? []).map((item) => item.title),
+          ...subject.analysis,
         ].some((value) => value.toLocaleLowerCase('ru').includes(normalizedQuery)),
       ),
     [normalizedQuery],
@@ -160,9 +167,6 @@ function App() {
                         {subject.assessment.type}
                       </Tag>
                       <Text>{subject.assessment.format}</Text>
-                      <Text className="assessment-source">
-                        {subject.assessment.source}
-                      </Text>
                     </div>
 
                     <div className="subject-facts">
@@ -194,9 +198,6 @@ function App() {
                             <Paragraph className="course-note-text">
                               {item.text}
                             </Paragraph>
-                            <Text className="course-note-source">
-                              Основание: {item.source}
-                            </Text>
                             {item.caution && (
                               <Text className="course-note-caution">
                                 {item.caution}
@@ -204,7 +205,108 @@ function App() {
                             )}
                           </div>
                         ))}
+                        {subject.courseInfo.length === 0 && (
+                          <Text className="empty-detail">
+                            Дополнительных сведений преподавателя в доступных
+                            материалах пока нет.
+                          </Text>
+                        )}
                       </section>
+
+                      {subject.materials && subject.materials.length > 0 && (
+                        <details className="detail-accordion material-accordion">
+                          <summary>
+                            Материалы курса ({subject.materials.length})
+                          </summary>
+                          <div className="accordion-content">
+                            {subject.materials.map((material) => (
+                              <div className="material-entry" key={material.href}>
+                                <Text className="material-category">
+                                  {material.category}
+                                </Text>
+                                <a
+                                  className="material-link"
+                                  download
+                                  href={material.href}
+                                >
+                                  <FileTextOutlined />
+                                  <span>{material.title}</span>
+                                  <Text className="material-format">
+                                    {material.format}
+                                  </Text>
+                                  <DownloadOutlined />
+                                </a>
+                                {material.caution && (
+                                  <Text className="material-caution">
+                                    {material.caution}
+                                  </Text>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      )}
+
+                      <section className="detail-section">
+                        <div className="detail-heading">
+                          <BookOutlined />
+                          <Text strong>Что требуется</Text>
+                        </div>
+                        {subject.requirements.map((item) => (
+                          <div className="requirement-note" key={item.text}>
+                            <div className="requirement-heading">
+                              <Tag
+                                color={
+                                  item.status === 'Известно' ? 'green' : 'gold'
+                                }
+                              >
+                                {item.status}
+                              </Tag>
+                            </div>
+                            <Paragraph className="course-note-text">
+                              {item.text}
+                            </Paragraph>
+                          </div>
+                        ))}
+                      </section>
+
+                      {(subject.topicGroups.length > 0 ||
+                        subject.topicItems.length > 0) && (
+                        <details className="detail-accordion">
+                          <summary>
+                            {subject.topicListTitle ??
+                              `Вопросы и темы (${subject.topicItems.length})`}
+                          </summary>
+                          <div className="accordion-content">
+                            {subject.topicGroups.map((group) => (
+                              <div className="topic-group" key={group.title}>
+                                <Text strong>{group.title}</Text>
+                                <Text>{group.detail}</Text>
+                              </div>
+                            ))}
+                            {subject.topicItems.length > 0 && (
+                              <ol className="topic-list">
+                                {subject.topicItems.map((item) => (
+                                  <li key={item}>{item}</li>
+                                ))}
+                              </ol>
+                            )}
+                          </div>
+                        </details>
+                      )}
+
+                      {subject.analysis.length > 0 && (
+                        <details className="detail-accordion">
+                          <summary>Аналитика, предположения и пробелы</summary>
+                          <div className="accordion-content">
+                            {subject.analysis.map((item) => (
+                              <Paragraph className="analysis-note" key={item}>
+                                {item}
+                              </Paragraph>
+                            ))}
+                          </div>
+                        </details>
+                      )}
 
                       <section className="detail-section">
                         <div className="detail-heading">
