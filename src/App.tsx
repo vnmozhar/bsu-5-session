@@ -4,6 +4,7 @@ import {
   ArrowRightOutlined,
   BookOutlined,
   CalendarOutlined,
+  ClockCircleOutlined,
   DownloadOutlined,
   FileTextOutlined,
   LinkOutlined,
@@ -251,6 +252,10 @@ function App() {
     day: 'numeric',
     month: 'long',
   })
+  const currentTimeLabel = currentTime.toLocaleTimeString('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
   const [selectedGroup, setSelectedGroup] = useState<StudyGroup>(() => {
     const savedGroup = window.localStorage.getItem('bsu-session-dashboard-group-v1')
     return savedGroup === 'СПС' || savedGroup === 'ХОЗ' ? savedGroup : 'ОБЩ'
@@ -337,6 +342,31 @@ function App() {
         detail: event.detail,
         status: null,
       }))
+  const currentAgendaItem = todayAgendaItems.find(
+    (event) => event.status === 'Сейчас идет',
+  )
+  const nextAgendaItem = todayAgendaItems.find((event) => event.status === 'Далее')
+  const hasUndeterminedCurrentEvent = todayAgendaItems.some((event) => {
+    if (event.status !== null) return false
+    const [start] = getTimeValues(event.time)
+    return start === undefined || start <= currentMinutes
+  })
+  const allTodayEventsCompleted =
+    todayAgendaItems.length > 0 &&
+    todayAgendaItems.every((event) => event.status === 'Завершено')
+  const currentMomentSummary = !hasOfficialSchedule
+    ? 'Время занятий пока не опубликовано, поэтому проверить, идет ли занятие сейчас, нельзя.'
+    : currentAgendaItem
+      ? `Сейчас идет: ${currentAgendaItem.subject}.`
+      : nextAgendaItem && hasUndeterminedCurrentEvent
+        ? `Следующее занятие: ${nextAgendaItem.subject} в ${nextAgendaItem.time}. Текущий статус другого занятия по расписанию не определить.`
+        : nextAgendaItem
+          ? `Сейчас занятий нет. Следующее: ${nextAgendaItem.subject} в ${nextAgendaItem.time}.`
+          : allTodayEventsCompleted
+            ? 'Все запланированные на сегодня занятия завершились.'
+            : todayAgendaItems.length === 0
+              ? 'Сейчас по опубликованному расписанию учебных мероприятий нет.'
+              : 'В расписании недостаточно данных о времени, чтобы определить, идет ли занятие сейчас.'
   const nextKnownEvent = [...visibleCalendarEvents]
     .filter((event) => event.date > today)
     .sort((first, second) => first.date.localeCompare(second.date))[0]
@@ -444,6 +474,9 @@ function App() {
               <Title id="today-brief-title" level={2}>
                 Сегодня, {todayLabel}
               </Title>
+              <Text className="today-clock">
+                <ClockCircleOutlined /> Сейчас {currentTimeLabel}
+              </Text>
               <Tag color={hasOfficialSchedule ? 'green' : 'gold'}>
                 {hasOfficialSchedule ? 'Официальное расписание' : 'Предварительные сведения'}
               </Tag>
@@ -480,9 +513,10 @@ function App() {
                 <Text className="today-brief-empty">
                   {hasOfficialSchedule
                     ? 'Сегодня по опубликованному расписанию учебных мероприятий нет.'
-                    : 'На сегодня учебные мероприятия в имеющихся сведениях не указаны.'}
+                    : 'На сегодня учебные мероприятия в предварительных сведениях не указаны.'}
                 </Text>
               )}
+              <Text className="today-current-status">{currentMomentSummary}</Text>
               {nextKnownEvent ? (
                 <div className="today-next-event">
                   <Text className="today-next-label">Ближайшее далее</Text>

@@ -131,6 +131,16 @@
   font-weight: 650;
 }
 
+.today-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #315b40;
+  font-size: 14px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
 .today-brief-heading .ant-tag {
   margin: 0;
   font-size: 10px;
@@ -148,6 +158,16 @@
 .today-brief-empty {
   color: #43584a;
   font-size: 13px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.today-current-status {
+  padding: 8px 10px;
+  border-left: 3px solid #6f9c79;
+  background: #f5f8f4;
+  color: #344b3b;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.55;
 }
