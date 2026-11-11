@@ -16,6 +16,7 @@ import {
   Alert,
   Card,
   Col,
+  Checkbox,
   ConfigProvider,
   Empty,
   Input,
@@ -32,7 +33,10 @@ import {
   publicSubjects,
   sessionRange,
 } from './data/publicSubjects'
-import { officialSchedule, officialScheduleSource } from './data/officialSchedule'
+import {
+  officialSchedule,
+  officialScheduleSource,
+} from './data/officialSchedule'
 import './App.css'
 
 const { Paragraph, Text, Title } = Typography
@@ -44,6 +48,19 @@ interface CalendarEvent {
   kind: string
   detail: string
   group?: string
+}
+
+const scheduleEventKindStyles: Record<string, { className: string; tagColor: string }> = {
+  Лекция: { className: 'lecture', tagColor: 'blue' },
+  Семинар: { className: 'seminar', tagColor: 'cyan' },
+  'Практическое занятие': { className: 'practice', tagColor: 'purple' },
+  Консультация: { className: 'consultation', tagColor: 'geekblue' },
+  Зачет: { className: 'credit', tagColor: 'gold' },
+  Экзамен: { className: 'exam', tagColor: 'red' },
+}
+
+function getScheduleEventKindStyle(kind: string) {
+  return scheduleEventKindStyles[kind] ?? { className: 'other', tagColor: 'default' }
 }
 
 interface TodayAgendaItem {
@@ -129,10 +146,12 @@ function CalendarGrid({
   events,
   selectedDate,
   onSelectDate,
+  showEventKinds = false,
 }: {
   events: readonly CalendarEvent[]
   selectedDate: string
   onSelectDate: (date: string) => void
+  showEventKinds?: boolean
 }) {
   const months = getSessionMonthKeys().map((monthKey) => {
     const [year, month] = monthKey.split('-').map(Number)
@@ -179,6 +198,7 @@ function CalendarGrid({
               }
 
               const dayEvents = events.filter((event) => event.date === date)
+              const eventKinds = [...new Set(dayEvents.map((event) => event.kind))]
 
               return dayEvents.length > 0 ? (
                 <button
@@ -191,7 +211,18 @@ function CalendarGrid({
                   type="button"
                 >
                   <span>{day}</span>
-                  <span className="calendar-event-marker" />
+                  {showEventKinds ? (
+                    <span aria-hidden="true" className="calendar-event-markers">
+                      {eventKinds.map((kind) => (
+                        <span
+                          className={`calendar-event-marker calendar-event-marker--${getScheduleEventKindStyle(kind).className}`}
+                          key={kind}
+                        />
+                      ))}
+                    </span>
+                  ) : (
+                    <span className="calendar-event-marker" />
+                  )}
                 </button>
               ) : (
                 <span className="calendar-day" key={date}>
@@ -275,6 +306,60 @@ function ScheduleGroupSelector({
   )
 }
 
+function ScheduleKindSelector({
+  kinds,
+  selectedKinds,
+  onChange,
+}: {
+  kinds: readonly string[]
+  selectedKinds: readonly string[]
+  onChange: (kinds: string[]) => void
+}) {
+  return (
+    <div aria-label="Фильтр по типам занятий" className="schedule-kind-control" role="group">
+      <div className="schedule-kind-heading">
+        <div>
+          <Text className="section-kicker">ПОКАЗАТЬ ТИПЫ СОБЫТИЙ</Text>
+          <Text className="schedule-group-instruction">
+            Можно выбрать несколько типов одновременно
+          </Text>
+        </div>
+        <button
+          className="schedule-kind-reset"
+          onClick={() => onChange([...kinds])}
+          type="button"
+        >
+          Показать все
+        </button>
+      </div>
+      <Checkbox.Group
+        aria-label="Типы занятий и аттестации"
+        className="schedule-kind-options"
+        onChange={(values) => onChange(values.map(String))}
+        value={[...selectedKinds]}
+      >
+        {kinds.map((kind) => {
+          const kindStyle = getScheduleEventKindStyle(kind)
+          const isSelected = selectedKinds.includes(kind)
+
+          return (
+            <div
+              className={`schedule-kind-option schedule-kind-option--${kindStyle.className}${isSelected ? ' is-selected' : ''}`}
+              key={kind}
+            >
+              <Checkbox value={kind}>{kind}</Checkbox>
+              <span
+                aria-hidden="true"
+                className={`calendar-event-marker calendar-event-marker--${kindStyle.className}`}
+              />
+            </div>
+          )
+        })}
+      </Checkbox.Group>
+    </div>
+  )
+}
+
 function App() {
   const [query, setQuery] = useState('')
   const [currentTime, setCurrentTime] = useState(() => new Date())
@@ -314,8 +399,12 @@ function App() {
         group: event.group,
       }))
     : preliminarySchedule
+  const calendarEventKinds = [...new Set(calendarEvents.map((event) => event.kind))]
+  const [selectedEventKinds, setSelectedEventKinds] = useState<string[] | null>(null)
+  const activeEventKinds = selectedEventKinds ?? calendarEventKinds
   const visibleCalendarEvents = calendarEvents.filter((event) =>
-    isScheduleEventVisible(event.group, selectedGroup),
+    isScheduleEventVisible(event.group, selectedGroup) &&
+    activeEventKinds.includes(event.kind),
   )
   const sortedCalendarEvents = [...visibleCalendarEvents].sort((first, second) =>
     first.date.localeCompare(second.date),
@@ -330,9 +419,24 @@ function App() {
     setSelectedGroup(group)
     window.localStorage.setItem('bsu-session-dashboard-group-v1', group)
     const groupEvents = calendarEvents
-      .filter((event) => isScheduleEventVisible(event.group, group))
+      .filter((event) =>
+        isScheduleEventVisible(event.group, group) &&
+        activeEventKinds.includes(event.kind),
+      )
       .sort((first, second) => first.date.localeCompare(second.date))
     const nextEvent = groupEvents.find((event) => event.date >= today) ?? groupEvents[0]
+    setSelectedDate(nextEvent?.date ?? '')
+  }
+  const handleEventKindsChange = (kinds: string[]) => {
+    setSelectedEventKinds(kinds.length === calendarEventKinds.length ? null : kinds)
+    const activeKinds = kinds
+    const filteredEvents = calendarEvents
+      .filter((event) =>
+        isScheduleEventVisible(event.group, selectedGroup) &&
+        activeKinds.includes(event.kind),
+      )
+      .sort((first, second) => first.date.localeCompare(second.date))
+    const nextEvent = filteredEvents.find((event) => event.date >= today) ?? filteredEvents[0]
     setSelectedDate(nextEvent?.date ?? '')
   }
   const selectedEvents = visibleCalendarEvents.filter(
@@ -342,11 +446,13 @@ function App() {
     ? officialSchedule.filter(
         (event) =>
           event.subjectId === selectedSubject.id &&
-          isScheduleEventVisible(event.group, selectedGroup),
-      )
+        isScheduleEventVisible(event.group, selectedGroup) &&
+        activeEventKinds.includes(event.kind),
+    )
     : []
   const visibleOfficialSchedule = officialSchedule.filter((event) =>
-    isScheduleEventVisible(event.group, selectedGroup),
+    isScheduleEventVisible(event.group, selectedGroup) &&
+    activeEventKinds.includes(event.kind),
   )
   const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes()
   const todayOfficialEvents = visibleOfficialSchedule
@@ -415,6 +521,7 @@ function App() {
     kind: event.kind,
     detail: `${event.time} · ${event.subject}`,
   }))
+  const subjectScheduleKinds = [...new Set(subjectSchedule.map((event) => event.kind))]
   const [selectedSubjectDate, setSelectedSubjectDate] = useState(
     subjectSchedule[0]?.date ?? '',
   )
@@ -638,11 +745,17 @@ function App() {
               Физически 5-я сессия (4 курс, 7 семестр): с {formatScheduleDate(sessionRange.start)} по{' '}
               {formatScheduleDate(sessionRange.end)}
             </Text>
+            <ScheduleKindSelector
+              kinds={calendarEventKinds}
+              onChange={handleEventKindsChange}
+              selectedKinds={activeEventKinds}
+            />
             <div className="calendar-layout">
               <CalendarGrid
                 events={visibleCalendarEvents}
                 onSelectDate={setSelectedDate}
                 selectedDate={selectedDate}
+                showEventKinds
               />
               <aside aria-live="polite" className="calendar-selection">
                 <Text className="section-kicker">ВЫБРАННАЯ ДАТА</Text>
@@ -1027,11 +1140,17 @@ function App() {
               onChange={handleGroupChange}
               selectedGroup={selectedGroup}
             />
+            <ScheduleKindSelector
+              kinds={calendarEventKinds}
+              onChange={handleEventKindsChange}
+              selectedKinds={activeEventKinds}
+            />
             <div className="calendar-layout expanded-calendar-layout">
               <CalendarGrid
                 events={visibleCalendarEvents}
                 onSelectDate={setSelectedDate}
                 selectedDate={selectedDate}
+                showEventKinds
               />
               <aside aria-live="polite" className="calendar-selection">
                 <Text className="section-kicker">ВЫБРАННАЯ ДАТА</Text>
@@ -1256,41 +1375,66 @@ function App() {
                           onChange={handleGroupChange}
                           selectedGroup={selectedGroup}
                         />
+                        <ScheduleKindSelector
+                          kinds={calendarEventKinds}
+                          onChange={handleEventKindsChange}
+                          selectedKinds={activeEventKinds}
+                        />
                         {subjectSchedule.length > 0 ? (
-                          <div className="subject-calendar-layout">
-                            <CalendarGrid
-                              events={subjectCalendarEvents}
-                              onSelectDate={setSelectedSubjectDate}
-                              selectedDate={effectiveSubjectDate}
-                            />
-                            <div className="subject-schedule-list">
-                              {selectedSubjectEvents.map((event) => (
-                                <article
-                                  className="subject-schedule-event"
-                                  key={`${event.date}-${event.time}-${event.kind}`}
-                                >
-                                  <div className="subject-event-meta">
-                                    <Text className="schedule-date-value">
-                                      {formatScheduleDate(event.date)}
-                                    </Text>
-                                    <Tag color={event.kind === 'Экзамен' || event.kind === 'Зачет' ? 'gold' : 'green'}>
-                                      {event.kind}
-                                    </Tag>
-                                  </div>
-                                  <Text strong>{event.time}</Text>
-                                  {event.group && <Text>{event.group}</Text>}
-                                  {event.instructor && <Text>{event.instructor}</Text>}
-                                  {event.location && <Text>{event.location}</Text>}
-                                  {event.preparation && (
-                                    <div className="subject-preparation">
-                                      <Text strong>Подготовить</Text>
-                                      <Text>{event.preparation}</Text>
-                                    </div>
-                                  )}
-                                </article>
+                          <>
+                            <div
+                              aria-label="Обозначения типов занятий и аттестации"
+                              className="subject-schedule-legend"
+                            >
+                              {subjectScheduleKinds.map((kind) => (
+                                <span className="subject-schedule-legend-item" key={kind}>
+                                  <span
+                                    aria-hidden="true"
+                                    className={`calendar-event-marker calendar-event-marker--${getScheduleEventKindStyle(kind).className}`}
+                                  />
+                                  {kind}
+                                </span>
                               ))}
                             </div>
-                          </div>
+                            <div className="subject-calendar-layout">
+                              <CalendarGrid
+                                events={subjectCalendarEvents}
+                                onSelectDate={setSelectedSubjectDate}
+                                selectedDate={effectiveSubjectDate}
+                                showEventKinds
+                              />
+                              <div className="subject-schedule-list">
+                                {selectedSubjectEvents.map((event) => (
+                                  <article
+                                    className="subject-schedule-event"
+                                    key={`${event.date}-${event.time}-${event.kind}`}
+                                  >
+                                    <div className="subject-event-meta">
+                                      <Text className="schedule-date-value">
+                                        {formatScheduleDate(event.date)}
+                                      </Text>
+                                      <Tag
+                                        className="subject-event-kind"
+                                        color={getScheduleEventKindStyle(event.kind).tagColor}
+                                      >
+                                        {event.kind}
+                                      </Tag>
+                                    </div>
+                                    <Text strong>{event.time}</Text>
+                                    {event.group && <Text>{event.group}</Text>}
+                                    {event.instructor && <Text>{event.instructor}</Text>}
+                                    {event.location && <Text>{event.location}</Text>}
+                                    {event.preparation && (
+                                      <div className="subject-preparation">
+                                        <Text strong>Подготовить</Text>
+                                        <Text>{event.preparation}</Text>
+                                      </div>
+                                    )}
+                                  </article>
+                                ))}
+                              </div>
+                            </div>
+                          </>
                         ) : (
                           <Text className="empty-detail">
                             В предоставленном расписании занятия по этому предмету не указаны.

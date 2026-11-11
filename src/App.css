@@ -1,4 +1,11 @@
 .dashboard {
+  --schedule-kind-lecture: var(--color-primary-700);
+  --schedule-kind-seminar: #16828a;
+  --schedule-kind-practice: #7048a8;
+  --schedule-kind-consultation: var(--color-primary-500);
+  --schedule-kind-credit: var(--color-accent-gold-dark);
+  --schedule-kind-exam: var(--color-error);
+
   width: min(1240px, 100%);
   margin: 0 auto;
   padding: 32px 32px 24px;
@@ -462,6 +469,142 @@
   color: var(--color-text-secondary);
   font-size: 10px;
   font-weight: 650;
+}
+
+.schedule-kind-control {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 16px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg-section);
+}
+
+.schedule-kind-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.schedule-kind-heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.schedule-kind-heading .section-kicker {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.schedule-kind-reset {
+  padding: 5px 10px;
+  border: 1px solid var(--color-primary-500);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--color-primary-700);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.schedule-kind-reset:hover {
+  background: var(--color-primary-100);
+}
+
+.schedule-kind-reset:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+.schedule-kind-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.schedule-kind-option {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.schedule-kind-option.is-selected {
+  border-color: color-mix(in srgb, var(--schedule-kind-color) 55%, white);
+  background: color-mix(in srgb, var(--schedule-kind-color) 9%, white);
+}
+
+.schedule-kind-option:hover {
+  border-color: var(--schedule-kind-color);
+}
+
+.schedule-kind-option .ant-checkbox-wrapper {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.schedule-kind-option .ant-checkbox-wrapper:hover {
+  color: inherit;
+}
+
+.schedule-kind-option .ant-checkbox {
+  top: 0;
+}
+
+.schedule-kind-option.is-selected .ant-checkbox-checked .ant-checkbox-inner {
+  border-color: var(--schedule-kind-color);
+  background-color: var(--schedule-kind-color);
+}
+
+.schedule-kind-option .calendar-event-marker {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  background: var(--schedule-kind-color);
+}
+
+.schedule-kind-option--lecture,
+.calendar-event-marker--lecture {
+  --schedule-kind-color: var(--schedule-kind-lecture);
+}
+
+.schedule-kind-option--seminar,
+.calendar-event-marker--seminar {
+  --schedule-kind-color: var(--schedule-kind-seminar);
+}
+
+.schedule-kind-option--practice,
+.calendar-event-marker--practice {
+  --schedule-kind-color: var(--schedule-kind-practice);
+}
+
+.schedule-kind-option--consultation,
+.calendar-event-marker--consultation {
+  --schedule-kind-color: var(--schedule-kind-consultation);
+}
+
+.schedule-kind-option--credit,
+.calendar-event-marker--credit {
+  --schedule-kind-color: var(--schedule-kind-credit);
+}
+
+.schedule-kind-option--exam,
+.calendar-event-marker--exam {
+  --schedule-kind-color: var(--schedule-kind-exam);
 }
 
 .schedule-group-option.is-selected .schedule-group-choice-state {
@@ -1345,6 +1488,31 @@ button.calendar-day {
   font-size: 17px;
 }
 
+.subject-schedule-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.subject-schedule-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.subject-schedule-legend .calendar-event-marker {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+}
+
 .subject-calendar-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 0.9fr);
@@ -1377,6 +1545,50 @@ button.calendar-day {
 
 .subject-event-meta .ant-tag {
   margin: 0;
+}
+
+.subject-event-kind.ant-tag {
+  padding-inline: 9px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.calendar-event-markers {
+  display: flex;
+  min-height: 7px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.subject-calendar-layout .calendar-event-marker {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+}
+
+.calendar-event-marker--lecture {
+  background: var(--schedule-kind-color);
+}
+
+.calendar-event-marker--seminar {
+  background: var(--schedule-kind-color);
+}
+
+.calendar-event-marker--practice {
+  background: var(--schedule-kind-color);
+}
+
+.calendar-event-marker--consultation {
+  background: var(--schedule-kind-color);
+}
+
+.calendar-event-marker--credit {
+  background: var(--schedule-kind-color);
+}
+
+.calendar-event-marker--exam {
+  background: var(--schedule-kind-color);
 }
 
 .subject-preparation {
