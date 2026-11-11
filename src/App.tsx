@@ -887,6 +887,53 @@ function App() {
   const creditSubjects = publicSubjects.filter(
     (subject) => subject.assessment.type === 'Зачет',
   )
+  const assessmentScheduleBySubject = new Map(
+    publicSubjects.map((subject) => [
+      subject.id,
+      officialSchedule
+        .filter((event) =>
+          event.subjectId === subject.id &&
+          (event.kind === 'Экзамен' || event.kind === 'Зачет') &&
+          isScheduleEventVisible(event.group, selectedGroup),
+        )
+        .map((event) => ({
+          date: event.date,
+          time: event.time,
+          group: event.group,
+          kind: event.kind,
+        })),
+    ]),
+  )
+  const renderAssessmentSchedule = (subject: typeof publicSubjects[number]) => {
+    const assessments = assessmentScheduleBySubject.get(subject.id) ?? []
+
+    return (
+        <li key={subject.id}>
+          <div className="session-subject-row">
+            <a href={`/subjects/${subject.id}`}>{subject.name}</a>
+            {assessments.length > 0 ? (
+              <span className="session-assessment-schedule">
+                {assessments.map((assessment) => (
+                  <span
+                    className="session-assessment-occurrence"
+                    key={`${assessment.date}-${assessment.time}-${assessment.group}`}
+                  >
+                    <Tag color={assessment.kind === 'Экзамен' ? 'blue' : 'green'}>
+                      {formatScheduleDate(assessment.date)} · {assessment.time}
+                    </Tag>
+                    {assessment.group}
+                  </span>
+                ))}
+              </span>
+            ) : (
+              <Text className="session-assessment-missing">
+                В расписании не указано для этой группы
+              </Text>
+            )}
+          </div>
+        </li>
+    )
+  }
   const courseworkDepartments = Array.from(
     publicSubjects.reduce<Map<string, typeof publicSubjects[number][]>>((departments, subject) => {
       if (subject.department) {
@@ -1168,8 +1215,7 @@ function App() {
                 Что в сессии
               </Title>
               <Text type="secondary">
-                Типы аттестации указаны в данных предметов. Даты экзаменов и
-                зачетов по дисциплинам пока не распределены.
+                Даты и время указаны по опубликованному расписанию для выбранной группы.
               </Text>
             </div>
             <div className="session-overview-grid">
@@ -1179,11 +1225,7 @@ function App() {
                   <Tag color="blue">{examSubjects.length}</Tag>
                 </div>
                 <ul className="session-subject-list">
-                  {examSubjects.map((subject) => (
-                    <li key={subject.id}>
-                      <a href={`/subjects/${subject.id}`}>{subject.name}</a>
-                    </li>
-                  ))}
+                  {examSubjects.map(renderAssessmentSchedule)}
                 </ul>
               </article>
 
@@ -1193,11 +1235,7 @@ function App() {
                   <Tag color="green">{creditSubjects.length}</Tag>
                 </div>
                 <ul className="session-subject-list">
-                  {creditSubjects.map((subject) => (
-                    <li key={subject.id}>
-                      <a href={`/subjects/${subject.id}`}>{subject.name}</a>
-                    </li>
-                  ))}
+                  {creditSubjects.map(renderAssessmentSchedule)}
                 </ul>
               </article>
 
