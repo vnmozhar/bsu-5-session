@@ -45,6 +45,7 @@ const weekdayLabels = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
 const scheduleDayStart = 8 * 60
 const scheduleDayEnd = 22 * 60
 const scheduleSlotMinutes = 30
+const minimumEventDisplayMinutes = 60
 type StudyGroup = 'ОБЩ' | 'СПС' | 'ХОЗ'
 
 interface CalendarEvent {
@@ -150,10 +151,20 @@ function formatWeekdayDate(date: string) {
   })
 }
 
+function formatFullWeekdayDate(date: string) {
+  return parseScheduleDate(date).toLocaleDateString('ru-RU', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
 interface PositionedWeekEvent {
   event: (typeof officialSchedule)[number]
   startMinutes: number
   endMinutes: number
+  displayEndMinutes: number
   lane: number
   laneCount: number
 }
@@ -167,11 +178,16 @@ function layoutWeekEvents(events: readonly (typeof officialSchedule)[number][]) 
       event,
       startMinutes,
       endMinutes: endMinutes ?? startMinutes + scheduleSlotMinutes,
+      displayEndMinutes: Math.max(
+        endMinutes ?? startMinutes + scheduleSlotMinutes,
+        startMinutes + minimumEventDisplayMinutes,
+      ),
       lane: 0,
       laneCount: 1,
     }]
   }).sort((first, second) =>
-    first.startMinutes - second.startMinutes || first.endMinutes - second.endMinutes,
+    first.startMinutes - second.startMinutes ||
+    first.displayEndMinutes - second.displayEndMinutes,
   )
 
   const positioned: PositionedWeekEvent[] = []
@@ -185,7 +201,7 @@ function layoutWeekEvents(events: readonly (typeof officialSchedule)[number][]) 
     const clusterEvents = cluster.map((item) => {
       let lane = laneEnds.findIndex((laneEnd) => laneEnd <= item.startMinutes)
       if (lane === -1) lane = laneEnds.length
-      laneEnds[lane] = item.endMinutes
+      laneEnds[lane] = item.displayEndMinutes
       return { ...item, lane }
     })
     const laneCount = laneEnds.length
@@ -263,9 +279,9 @@ function WeekCalendar({
                     '--weekly-event-lanes': Math.max(1, ...dayEvents.map((event) => event.laneCount)),
                   } as CSSProperties & { '--weekly-event-lanes': number }}
                 >
-                  {dayEvents.map(({ event, startMinutes, endMinutes, lane, laneCount }) => {
+                  {dayEvents.map(({ event, startMinutes, displayEndMinutes, lane, laneCount }) => {
                     const visibleStart = Math.max(startMinutes, scheduleDayStart)
-                    const visibleEnd = Math.min(endMinutes, scheduleDayEnd)
+                    const visibleEnd = Math.min(displayEndMinutes, scheduleDayEnd)
                     if (visibleEnd <= visibleStart) return null
 
                     const startSlot = Math.floor(
@@ -319,26 +335,29 @@ async function downloadWeekPdf(
     ])
   pdfMake.addVirtualFileSystem(virtualFileSystem)
 
-  const rows = [...events]
+  const eventsByDate = [...events]
     .sort((first, second) =>
       first.date.localeCompare(second.date) ||
       (getTimeValues(first.time)[0] ?? 0) - (getTimeValues(second.time)[0] ?? 0),
     )
-    .map((event) => [
-      `${formatWeekdayDate(event.date)}, ${event.time}`,
-      event.kind,
-      event.subject,
-      event.group,
-      event.instructor,
-    ])
+    .reduce<(typeof events[number])[][]>((days, event) => {
+      const currentDay = days.at(-1)
+      if (currentDay?.[0]?.date === event.date) {
+        currentDay.push(event)
+      } else {
+        days.push([event])
+      }
+      return days
+    }, [])
   const document: TDocumentDefinitions = {
     pageSize: 'A4',
-    pageOrientation: 'landscape',
-    pageMargins: [26, 30, 26, 34],
-    defaultStyle: { font: 'Roboto', fontSize: 8, color: '#1A202C' },
+    pageOrientation: 'portrait',
+    pageMargins: [24, 28, 24, 34],
+    defaultStyle: { font: 'Roboto', fontSize: 7, color: '#1A202C' },
     styles: {
-      title: { fontSize: 17, bold: true, color: '#0A3470', margin: [0, 0, 0, 4] },
-      subtitle: { fontSize: 10, color: '#4A5568', margin: [0, 0, 0, 12] },
+      title: { fontSize: 16, bold: true, color: '#0A3470', margin: [0, 0, 0, 4] },
+      subtitle: { fontSize: 8, color: '#4A5568', margin: [0, 0, 0, 10] },
+      dayHeading: { fontSize: 10, bold: true, color: '#0A3470' },
       tableHeader: { bold: true, color: '#FFFFFF', fillColor: '#0A3470' },
     },
     content: [
@@ -347,33 +366,63 @@ async function downloadWeekPdf(
         text: `Неделя: ${formatScheduleDate(weekStart)} - ${formatScheduleDate(weekEnd)} · Группа: ${selectedGroup} · Типы: ${selectedKinds.join(', ') || 'не выбраны'}`,
         style: 'subtitle',
       },
-      ...(rows.length
-        ? [{
-            table: {
-              headerRows: 1,
-              widths: [112, 90, '*', 100, 120],
-              body: [
-                [
-                  { text: 'Дата и время', style: 'tableHeader' },
-                  { text: 'Тип', style: 'tableHeader' },
-                  { text: 'Предмет', style: 'tableHeader' },
-                  { text: 'Группа', style: 'tableHeader' },
-                  { text: 'Преподаватель', style: 'tableHeader' },
+      ...(eventsByDate.length
+        ? eventsByDate.flatMap((dayEvents) => [
+            {
+              table: {
+                widths: ['*'],
+                body: [[{
+                  text: formatFullWeekdayDate(dayEvents[0].date),
+                  style: 'dayHeading',
+                }]],
+              },
+              layout: {
+                fillColor: () => '#E8EFF8',
+                hLineWidth: () => 0,
+                vLineWidth: () => 0,
+                paddingLeft: () => 6,
+                paddingRight: () => 6,
+                paddingTop: () => 5,
+                paddingBottom: () => 5,
+              },
+              margin: [0, 8, 0, 4] as [number, number, number, number],
+            },
+            {
+              table: {
+                headerRows: 1,
+                widths: [62, 50, '*', 59, 76, 43],
+                body: [
+                  [
+                    { text: 'Время', style: 'tableHeader' },
+                    { text: 'Тип', style: 'tableHeader' },
+                    { text: 'Предмет', style: 'tableHeader' },
+                    { text: 'Группа', style: 'tableHeader' },
+                    { text: 'Преподаватель', style: 'tableHeader' },
+                    { text: 'Аудитория', style: 'tableHeader' },
+                  ],
+                  ...dayEvents.map((event) => [
+                    event.time,
+                    event.kind,
+                    event.subject,
+                    event.group,
+                    event.instructor,
+                    event.location ?? '',
+                  ]),
                 ],
-                ...rows,
-              ],
+              },
+              layout: {
+                fillColor: (rowIndex: number) =>
+                  rowIndex > 0 && rowIndex % 2 === 0 ? '#F5F7FA' : null,
+                hLineColor: () => '#E3E8EF',
+                vLineColor: () => '#E3E8EF',
+                paddingLeft: () => 4,
+                paddingRight: () => 4,
+                paddingTop: () => 4,
+                paddingBottom: () => 4,
+              },
+              margin: [0, 0, 0, 5] as [number, number, number, number],
             },
-            layout: {
-              fillColor: (rowIndex: number) =>
-                rowIndex > 0 && rowIndex % 2 === 0 ? '#F5F7FA' : null,
-              hLineColor: () => '#E3E8EF',
-              vLineColor: () => '#E3E8EF',
-              paddingLeft: () => 5,
-              paddingRight: () => 5,
-              paddingTop: () => 4,
-              paddingBottom: () => 4,
-            },
-          }]
+          ])
         : [{ text: 'На выбранную неделю нет событий по текущим фильтрам.' }]),
     ],
     footer: (currentPage: number, pageCount: number) => ({
@@ -385,7 +434,13 @@ async function downloadWeekPdf(
     }),
   }
 
-  await pdfMake.createPdf(document).download(`raspisanie-${weekStart}-${weekEnd}.pdf`)
+  const pdfBlob = await pdfMake.createPdf(document).getBlob()
+  const downloadUrl = URL.createObjectURL(pdfBlob)
+  const downloadLink = window.document.createElement('a')
+  downloadLink.href = downloadUrl
+  downloadLink.download = `raspisanie-${weekStart}-${weekEnd}.pdf`
+  downloadLink.click()
+  window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000)
 }
 
 function getSessionMonthKeys() {
@@ -1449,13 +1504,16 @@ function App() {
                   type="button"
                 >
                   <ArrowLeftOutlined />
+                  <span>Предыдущая</span>
                 </button>
                 <button
                   className="week-today-button"
                   onClick={() => setWeekStart(getWeekStart(today))}
+                  title={`Перейти к текущей неделе: ${formatScheduleDate(getWeekStart(today))} - ${formatScheduleDate(addDays(getWeekStart(today), 6))}`}
                   type="button"
                 >
-                  Сегодня
+                  <CalendarOutlined />
+                  Текущая неделя
                 </button>
                 <button
                   aria-label="Следующая неделя"
@@ -1463,6 +1521,7 @@ function App() {
                   onClick={() => changeWeek(1)}
                   type="button"
                 >
+                  <span>Следующая</span>
                   <ArrowRightOutlined />
                 </button>
                 <button

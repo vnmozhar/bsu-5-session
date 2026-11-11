@@ -1239,7 +1239,6 @@ button.calendar-day {
 }
 
 .week-nav-button {
-  width: 38px;
   padding: 7px;
 }
 
@@ -1373,9 +1372,10 @@ button.calendar-day {
   z-index: 1;
   display: flex;
   min-width: 0;
+  min-height: 64px;
   flex-direction: column;
   gap: 2px;
-  overflow: hidden;
+  overflow: auto;
   margin: 1px 2px;
   padding: 4px 5px;
   border-left: 3px solid var(--schedule-kind-color);
