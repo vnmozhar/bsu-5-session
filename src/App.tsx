@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { type CSSProperties, useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
@@ -26,6 +26,7 @@ import {
   Typography,
   theme,
 } from 'antd'
+import type { TDocumentDefinitions } from 'pdfmake/interfaces'
 import {
   departmentContacts,
   facultyContacts,
@@ -41,6 +42,9 @@ import './App.css'
 
 const { Paragraph, Text, Title } = Typography
 const weekdayLabels = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
+const scheduleDayStart = 8 * 60
+const scheduleDayEnd = 22 * 60
+const scheduleSlotMinutes = 30
 type StudyGroup = 'ОБЩ' | 'СПС' | 'ХОЗ'
 
 interface CalendarEvent {
@@ -124,6 +128,264 @@ function formatScheduleDate(date: string) {
     month: 'long',
     year: 'numeric',
   })
+}
+
+function addDays(date: string, count: number) {
+  const result = parseScheduleDate(date)
+  result.setDate(result.getDate() + count)
+  return toLocalISODate(result)
+}
+
+function getWeekStart(date: string) {
+  const parsedDate = parseScheduleDate(date)
+  parsedDate.setDate(parsedDate.getDate() - ((parsedDate.getDay() + 6) % 7))
+  return toLocalISODate(parsedDate)
+}
+
+function formatWeekdayDate(date: string) {
+  return parseScheduleDate(date).toLocaleDateString('ru-RU', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  })
+}
+
+interface PositionedWeekEvent {
+  event: (typeof officialSchedule)[number]
+  startMinutes: number
+  endMinutes: number
+  lane: number
+  laneCount: number
+}
+
+function layoutWeekEvents(events: readonly (typeof officialSchedule)[number][]) {
+  const timedEvents = events.flatMap((event) => {
+    const [startMinutes, endMinutes] = getTimeValues(event.time)
+    if (startMinutes === undefined) return []
+
+    return [{
+      event,
+      startMinutes,
+      endMinutes: endMinutes ?? startMinutes + scheduleSlotMinutes,
+      lane: 0,
+      laneCount: 1,
+    }]
+  }).sort((first, second) =>
+    first.startMinutes - second.startMinutes || first.endMinutes - second.endMinutes,
+  )
+
+  const positioned: PositionedWeekEvent[] = []
+  let cluster: typeof timedEvents = []
+  let clusterEnd = -1
+
+  const placeCluster = () => {
+    if (cluster.length === 0) return
+
+    const laneEnds: number[] = []
+    const clusterEvents = cluster.map((item) => {
+      let lane = laneEnds.findIndex((laneEnd) => laneEnd <= item.startMinutes)
+      if (lane === -1) lane = laneEnds.length
+      laneEnds[lane] = item.endMinutes
+      return { ...item, lane }
+    })
+    const laneCount = laneEnds.length
+    positioned.push(...clusterEvents.map((item) => ({ ...item, laneCount })))
+    cluster = []
+    clusterEnd = -1
+  }
+
+  for (const event of timedEvents) {
+    if (cluster.length > 0 && event.startMinutes >= clusterEnd) placeCluster()
+    cluster.push(event)
+    clusterEnd = Math.max(clusterEnd, event.endMinutes)
+  }
+  placeCluster()
+
+  return positioned
+}
+
+function WeekCalendar({
+  weekStart,
+  events,
+}: {
+  weekStart: string
+  events: readonly (typeof officialSchedule)[number][]
+}) {
+  const days = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index))
+  const hourLabels = Array.from(
+    { length: (scheduleDayEnd - scheduleDayStart) / 60 },
+    (_, index) => scheduleDayStart / 60 + index,
+  )
+
+  return (
+    <div aria-label="Расписание на неделю" className="weekly-calendar-scroll">
+      <div className="weekly-calendar">
+        <div className="weekly-calendar-header">
+          <span aria-hidden="true" className="weekly-time-gutter" />
+          {days.map((date) => {
+            const dayEvents = events.filter((event) => event.date === date)
+            return (
+              <div className="weekly-day-heading" key={date}>
+                <Text>{formatWeekdayDate(date)}</Text>
+                <Text className="weekly-day-count">
+                  {dayEvents.length ? `${dayEvents.length} событий` : 'Нет занятий'}
+                </Text>
+              </div>
+            )
+          })}
+        </div>
+        <div className="weekly-calendar-body">
+          <div aria-hidden="true" className="weekly-time-column">
+            {hourLabels.map((hour, index) => (
+              <span
+                className="weekly-time-label"
+                key={hour}
+                style={{ gridRow: `${index * 2 + 1}` }}
+              >
+                {`${String(hour).padStart(2, '0')}:00`}
+              </span>
+            ))}
+          </div>
+          {days.map((date) => {
+            const dayEvents = layoutWeekEvents(
+              events.filter((event) => event.date === date),
+            )
+
+            return (
+              <section
+                aria-label={`${formatWeekdayDate(date)}, ${dayEvents.length} событий`}
+                className="weekly-day-column"
+                key={date}
+              >
+                <div
+                  className="weekly-day-track"
+                  style={{
+                    '--weekly-event-lanes': Math.max(1, ...dayEvents.map((event) => event.laneCount)),
+                  } as CSSProperties & { '--weekly-event-lanes': number }}
+                >
+                  {dayEvents.map(({ event, startMinutes, endMinutes, lane, laneCount }) => {
+                    const visibleStart = Math.max(startMinutes, scheduleDayStart)
+                    const visibleEnd = Math.min(endMinutes, scheduleDayEnd)
+                    if (visibleEnd <= visibleStart) return null
+
+                    const startSlot = Math.floor(
+                      (visibleStart - scheduleDayStart) / scheduleSlotMinutes,
+                    )
+                    const endSlot = Math.max(
+                      startSlot + 1,
+                      Math.ceil((visibleEnd - scheduleDayStart) / scheduleSlotMinutes),
+                    )
+                    const eventStyle = getScheduleEventKindStyle(event.kind)
+
+                    return (
+                      <article
+                        className={`weekly-event weekly-event--${eventStyle.className}`}
+                        key={`${event.date}-${event.time}-${event.subject}-${event.group}`}
+                        style={{
+                          gridColumn: `${lane + 1} / span 1`,
+                          gridRow: `${startSlot + 1} / span ${endSlot - startSlot}`,
+                          '--weekly-event-lanes': laneCount,
+                        } as CSSProperties & { '--weekly-event-lanes': number }}
+                        title={`${event.time} · ${event.kind} · ${event.subject} · ${event.group}`}
+                      >
+                        <Text className="weekly-event-time">{event.time}</Text>
+                        <Text className="weekly-event-subject">{event.subject}</Text>
+                        <Text className="weekly-event-kind">{event.kind}</Text>
+                        <Text className="weekly-event-group">{event.group}</Text>
+                      </article>
+                    )
+                  })}
+                </div>
+              </section>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+async function downloadWeekPdf(
+  weekStart: string,
+  weekEnd: string,
+  events: readonly (typeof officialSchedule)[number][],
+  selectedGroup: StudyGroup,
+  selectedKinds: readonly string[],
+) {
+  const [{ default: pdfMake }, { default: virtualFileSystem }] =
+    await Promise.all([
+      import('pdfmake/build/pdfmake'),
+      import('pdfmake/build/vfs_fonts'),
+    ])
+  pdfMake.addVirtualFileSystem(virtualFileSystem)
+
+  const rows = [...events]
+    .sort((first, second) =>
+      first.date.localeCompare(second.date) ||
+      (getTimeValues(first.time)[0] ?? 0) - (getTimeValues(second.time)[0] ?? 0),
+    )
+    .map((event) => [
+      `${formatWeekdayDate(event.date)}, ${event.time}`,
+      event.kind,
+      event.subject,
+      event.group,
+      event.instructor,
+    ])
+  const document: TDocumentDefinitions = {
+    pageSize: 'A4',
+    pageOrientation: 'landscape',
+    pageMargins: [26, 30, 26, 34],
+    defaultStyle: { font: 'Roboto', fontSize: 8, color: '#1A202C' },
+    styles: {
+      title: { fontSize: 17, bold: true, color: '#0A3470', margin: [0, 0, 0, 4] },
+      subtitle: { fontSize: 10, color: '#4A5568', margin: [0, 0, 0, 12] },
+      tableHeader: { bold: true, color: '#FFFFFF', fillColor: '#0A3470' },
+    },
+    content: [
+      { text: 'Расписание сессии', style: 'title' },
+      {
+        text: `Неделя: ${formatScheduleDate(weekStart)} - ${formatScheduleDate(weekEnd)} · Группа: ${selectedGroup} · Типы: ${selectedKinds.join(', ') || 'не выбраны'}`,
+        style: 'subtitle',
+      },
+      ...(rows.length
+        ? [{
+            table: {
+              headerRows: 1,
+              widths: [112, 90, '*', 100, 120],
+              body: [
+                [
+                  { text: 'Дата и время', style: 'tableHeader' },
+                  { text: 'Тип', style: 'tableHeader' },
+                  { text: 'Предмет', style: 'tableHeader' },
+                  { text: 'Группа', style: 'tableHeader' },
+                  { text: 'Преподаватель', style: 'tableHeader' },
+                ],
+                ...rows,
+              ],
+            },
+            layout: {
+              fillColor: (rowIndex: number) =>
+                rowIndex > 0 && rowIndex % 2 === 0 ? '#F5F7FA' : null,
+              hLineColor: () => '#E3E8EF',
+              vLineColor: () => '#E3E8EF',
+              paddingLeft: () => 5,
+              paddingRight: () => 5,
+              paddingTop: () => 4,
+              paddingBottom: () => 4,
+            },
+          }]
+        : [{ text: 'На выбранную неделю нет событий по текущим фильтрам.' }]),
+    ],
+    footer: (currentPage: number, pageCount: number) => ({
+      text: `${currentPage} / ${pageCount}`,
+      alignment: 'right',
+      margin: [0, 0, 26, 0],
+      fontSize: 8,
+      color: '#4A5568',
+    }),
+  }
+
+  await pdfMake.createPdf(document).download(`raspisanie-${weekStart}-${weekEnd}.pdf`)
 }
 
 function getSessionMonthKeys() {
@@ -415,6 +677,11 @@ function App() {
   const [selectedDate, setSelectedDate] = useState(
     upcomingEvents[0]?.date ?? sortedCalendarEvents[0]?.date ?? '',
   )
+  const [weekStart, setWeekStart] = useState(() =>
+    getWeekStart(upcomingEvents[0]?.date ?? today),
+  )
+  const [isPdfLoading, setIsPdfLoading] = useState(false)
+  const [pdfError, setPdfError] = useState<string | null>(null)
   const handleGroupChange = (group: StudyGroup) => {
     setSelectedGroup(group)
     window.localStorage.setItem('bsu-session-dashboard-group-v1', group)
@@ -454,6 +721,32 @@ function App() {
     isScheduleEventVisible(event.group, selectedGroup) &&
     activeEventKinds.includes(event.kind),
   )
+  const weekEnd = addDays(weekStart, 6)
+  const weekScheduleEvents = visibleOfficialSchedule.filter(
+    (event) => event.date >= weekStart && event.date <= weekEnd,
+  )
+  const changeWeek = (offset: number) => {
+    setWeekStart((currentWeekStart) => addDays(currentWeekStart, offset * 7))
+  }
+  const handleDownloadWeekPdf = async () => {
+    setIsPdfLoading(true)
+    setPdfError(null)
+    try {
+      await downloadWeekPdf(
+        weekStart,
+        weekEnd,
+        weekScheduleEvents,
+        selectedGroup,
+        activeEventKinds,
+      )
+    } catch (error) {
+      setPdfError(
+        `Не удалось сформировать PDF: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    } finally {
+      setIsPdfLoading(false)
+    }
+  }
   const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes()
   const todayOfficialEvents = visibleOfficialSchedule
     .filter((event) => event.date === today)
@@ -1132,10 +1425,6 @@ function App() {
             <Title id="expanded-schedule-title" level={2}>
               Полное расписание
             </Title>
-            <Text className="session-range">
-              Физически 5-я сессия (4 курс, 7 семестр): с {formatScheduleDate(sessionRange.start)} по{' '}
-              {formatScheduleDate(sessionRange.end)}
-            </Text>
             <ScheduleGroupSelector
               onChange={handleGroupChange}
               selectedGroup={selectedGroup}
@@ -1145,50 +1434,66 @@ function App() {
               onChange={handleEventKindsChange}
               selectedKinds={activeEventKinds}
             />
-            <div className="calendar-layout expanded-calendar-layout">
-              <CalendarGrid
-                events={visibleCalendarEvents}
-                onSelectDate={setSelectedDate}
-                selectedDate={selectedDate}
-                showEventKinds
-              />
-              <aside aria-live="polite" className="calendar-selection">
-                <Text className="section-kicker">ВЫБРАННАЯ ДАТА</Text>
-                {selectedDate ? (
-                  <>
-                    <Title level={3}>{formatScheduleDate(selectedDate)}</Title>
-                    {selectedEvents.map((event) => (
-                      <div className="calendar-event-detail" key={`${event.date}-${event.kind}-${event.detail}`}>
-                        <Text className="schedule-date-kind">{event.kind}</Text>
-                        <Text className="schedule-date-detail">{event.detail}</Text>
-                      </div>
-                    ))}
-                  </>
-                ) : (
-                  <Text>Даты пока не указаны</Text>
-                )}
-              </aside>
-            </div>
-            {hasOfficialSchedule ? (
-              <div className="official-schedule-list">
-                {visibleOfficialSchedule.map((event) => (
-                  <article className="official-schedule-item" key={`${event.date}-${event.time}-${event.group}`}>
-                    <div>
-                      <Text className="schedule-date-value">
-                        {formatScheduleDate(event.date)}
-                      </Text>
-                      <Text className="schedule-date-kind">{event.kind}</Text>
-                    </div>
-                    <div className="official-schedule-details">
-                      <Text strong>{event.time}</Text>
-                      <Text>{event.subject}</Text>
-                      <Text>{event.group}</Text>
-                      {event.instructor && <Text>{event.instructor}</Text>}
-                      {event.location && <Text>{event.location}</Text>}
-                    </div>
-                  </article>
-                ))}
+            <div className="week-toolbar">
+              <div>
+                <Text className="section-kicker">НЕДЕЛЬНОЕ РАСПИСАНИЕ</Text>
+                <Title level={3}>
+                  {formatScheduleDate(weekStart)} - {formatScheduleDate(weekEnd)}
+                </Title>
               </div>
+              <div className="week-navigation">
+                <button
+                  aria-label="Предыдущая неделя"
+                  className="week-nav-button"
+                  onClick={() => changeWeek(-1)}
+                  type="button"
+                >
+                  <ArrowLeftOutlined />
+                </button>
+                <button
+                  className="week-today-button"
+                  onClick={() => setWeekStart(getWeekStart(today))}
+                  type="button"
+                >
+                  Сегодня
+                </button>
+                <button
+                  aria-label="Следующая неделя"
+                  className="week-nav-button"
+                  onClick={() => changeWeek(1)}
+                  type="button"
+                >
+                  <ArrowRightOutlined />
+                </button>
+                <button
+                  className="week-download-button"
+                  disabled={isPdfLoading}
+                  onClick={() => void handleDownloadWeekPdf()}
+                  type="button"
+                >
+                  <DownloadOutlined />
+                  {isPdfLoading ? 'Готовим PDF...' : 'Скачать PDF недели'}
+                </button>
+              </div>
+            </div>
+            {pdfError && (
+              <Alert
+                className="week-pdf-error"
+                title={pdfError}
+                showIcon
+                type="error"
+              />
+            )}
+            {hasOfficialSchedule ? (
+              weekScheduleEvents.length > 0 ? (
+                <WeekCalendar events={weekScheduleEvents} weekStart={weekStart} />
+              ) : (
+                <Empty description="На этой неделе по выбранным фильтрам событий нет">
+                  <Text type="secondary">
+                    Попробуйте выбрать другую неделю или изменить фильтры.
+                  </Text>
+                </Empty>
+              )
             ) : (
               <Empty description="Официальное расписание еще не опубликовано" />
             )}
