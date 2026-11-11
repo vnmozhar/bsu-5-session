@@ -28,11 +28,11 @@ import {
 import {
   departmentContacts,
   facultyContacts,
-  officialSchedule,
   preliminarySchedule,
   publicSubjects,
   sessionRange,
 } from './data/publicSubjects'
+import { officialSchedule, officialScheduleSource } from './data/officialSchedule'
 import './App.css'
 
 const { Paragraph, Text, Title } = Typography
@@ -53,6 +53,7 @@ interface TodayAgendaItem {
   subject: string
   group: string
   location: string
+  instructor: string
   detail: string
   status: string | null
 }
@@ -307,7 +308,9 @@ function App() {
     ? officialSchedule.map((event) => ({
         date: event.date,
         kind: event.kind,
-        detail: `${event.time} · ${event.subject} · ${event.group} · ${event.location}`,
+        detail: [event.time, event.subject, event.instructor, event.group, event.location]
+          .filter(Boolean)
+          .join(' · '),
         group: event.group,
       }))
     : preliminarySchedule
@@ -363,7 +366,8 @@ function App() {
         kind: event.kind,
         subject: event.subject,
         group: event.group,
-        location: event.location,
+        location: event.location ?? '',
+        instructor: event.instructor,
         detail: '',
         status: getTodayEventStatus(event.time, currentMinutes),
       }))
@@ -374,6 +378,7 @@ function App() {
         subject: event.kind,
         group: '',
         location: '',
+        instructor: '',
         detail: event.detail,
         status: null,
       }))
@@ -503,9 +508,9 @@ function App() {
             </Tag>
             <Title level={1}>Учебная сессия</Title>
             <Paragraph className="hero-description">
-              Предварительные даты, форматы аттестации и сведения о требованиях
-              по предметам. Для каждого указаны источники информации и то, что
-              еще нужно подтвердить.
+              Расписание занятий и аттестаций, сведения о требованиях по
+              предметам и источники информации. Данные, которые еще нужно
+              подтвердить, отмечены отдельно.
             </Paragraph>
             <div className="hero-meta">
               <span className="hero-dot" />
@@ -557,9 +562,11 @@ function App() {
                           )}
                         </div>
                         {event.detail && <Text>{event.detail}</Text>}
-                        {(event.group || event.location) && (
+                        {(event.instructor || event.group || event.location) && (
                           <Text type="secondary">
-                            {[event.group, event.location].filter(Boolean).join(' · ')}
+                            {[event.instructor, event.group, event.location]
+                              .filter(Boolean)
+                              .join(' · ')}
                           </Text>
                         )}
                       </div>
@@ -621,7 +628,7 @@ function App() {
               }
               description={
                 hasOfficialSchedule
-                  ? 'Календарь показывает даты занятий. Откройте полное расписание, чтобы посмотреть время, предметы, группы и аудитории.'
+                  ? `${officialScheduleSource} Выберите группу, чтобы отфильтровать расписание.`
                   : 'Пока известны только предварительные даты. Предметы, группы и время еще не подтверждены.'
               }
               showIcon
@@ -1057,7 +1064,8 @@ function App() {
                       <Text strong>{event.time}</Text>
                       <Text>{event.subject}</Text>
                       <Text>{event.group}</Text>
-                      <Text>{event.location}</Text>
+                      {event.instructor && <Text>{event.instructor}</Text>}
+                      {event.location && <Text>{event.location}</Text>}
                     </div>
                   </article>
                 ))}
@@ -1270,18 +1278,22 @@ function App() {
                                     </Tag>
                                   </div>
                                   <Text strong>{event.time}</Text>
-                                  <Text>{event.location}</Text>
-                                  <div className="subject-preparation">
-                                    <Text strong>Подготовить</Text>
-                                    <Text>{event.preparation}</Text>
-                                  </div>
+                                  {event.group && <Text>{event.group}</Text>}
+                                  {event.instructor && <Text>{event.instructor}</Text>}
+                                  {event.location && <Text>{event.location}</Text>}
+                                  {event.preparation && (
+                                    <div className="subject-preparation">
+                                      <Text strong>Подготовить</Text>
+                                      <Text>{event.preparation}</Text>
+                                    </div>
+                                  )}
                                 </article>
                               ))}
                             </div>
                           </div>
                         ) : (
                           <Text className="empty-detail">
-                            Расписание занятий по этому предмету появится после публикации официального расписания.
+                            В предоставленном расписании занятия по этому предмету не указаны.
                           </Text>
                         )}
                       </section>

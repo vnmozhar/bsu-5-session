@@ -146,19 +146,6 @@ export const facultyContacts = {
   address: '220006, Минск, ул. Ленинградская, 8',
 } as const
 
-export interface OfficialScheduleEntry {
-  subjectId: string
-  date: string
-  time: string
-  kind: 'Лекция' | 'Практическое занятие' | 'Зачет' | 'Экзамен'
-  subject: string
-  group: string
-  location: string
-  preparation: string
-}
-
-export const officialSchedule: readonly OfficialScheduleEntry[] = []
-
 export const publicSubjects: readonly PublicSubject[] = [
   {
     id: 'private-international-law',
