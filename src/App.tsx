@@ -38,6 +38,7 @@ import {
   officialSchedule,
   officialScheduleSource,
 } from './data/officialSchedule'
+import userGuide from '../USER_GUIDE.md?raw'
 import './App.css'
 
 const { Paragraph, Text, Title } = Typography
@@ -1118,6 +1119,13 @@ function App() {
                 </Tag>
                 <a className="schedule-full-link" href="/schedule">
                   Открыть календарь сессии <ArrowRightOutlined />
+                </a>
+                <a
+                  className="schedule-full-link"
+                  download="rukovodstvo-polzovatelya.md"
+                  href={`data:text/markdown;charset=utf-8,${encodeURIComponent(userGuide)}`}
+                >
+                  <FileTextOutlined /> Руководство пользователя
                 </a>
               </div>
             </div>
