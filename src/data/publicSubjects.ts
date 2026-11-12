@@ -381,7 +381,7 @@ export const publicSubjects: readonly PublicSubject[] = [
     ],
     portalUrl: 'https://edulaw.bsu.by/course/view.php?id=419',
     portalNote:
-      'Сначала войдите на портал под своей учетной записью, затем используйте код для записи на курс.',
+      'Для записи на курс потребуется кодовое слово. Сначала войдите на портал под своей учетной записью, затем нажмите «Показать кодовое слово» и введите его.',
     courseEnrollmentCode: 'agropravo2v',
     materials: [
       {

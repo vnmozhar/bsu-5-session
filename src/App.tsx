@@ -1799,68 +1799,70 @@ function App() {
                               >
                                 Учебный портал БГУ
                               </a>
-                              {subject.courseEnrollmentCode && (
-                                <div className="course-enrollment-code">
-                                  <button
-                                    aria-expanded={isEnrollmentCodeVisible}
-                                    className="course-code-toggle"
-                                    onClick={() => {
-                                      setIsEnrollmentCodeVisible((visible) => !visible)
-                                      setEnrollmentCodeCopyStatus('')
-                                    }}
-                                    type="button"
-                                  >
-                                    {isEnrollmentCodeVisible ? (
-                                      <EyeInvisibleOutlined />
-                                    ) : (
-                                      <EyeOutlined />
-                                    )}
-                                    {isEnrollmentCodeVisible ? 'Скрыть код' : 'Показать код записи'}
-                                  </button>
-                                  {isEnrollmentCodeVisible && (
-                                    <div className="course-code-value">
-                                      <code>{subject.courseEnrollmentCode}</code>
-                                      <button
-                                        aria-label="Скопировать код записи на курс"
-                                        className="course-code-copy"
-                                        onClick={async () => {
-                                          const enrollmentCode = subject.courseEnrollmentCode
-                                          if (!enrollmentCode) return
-
-                                          try {
-                                            await navigator.clipboard.writeText(
-                                              enrollmentCode,
-                                            )
-                                            setEnrollmentCodeCopyStatus('Код скопирован')
-                                          } catch (error) {
-                                            setEnrollmentCodeCopyStatus(
-                                              `Не удалось скопировать код: ${error instanceof Error ? error.message : String(error)}`,
-                                            )
-                                          }
-                                        }}
-                                        title="Скопировать код"
-                                        type="button"
-                                      >
-                                        <CopyOutlined />
-                                      </button>
-                                    </div>
-                                  )}
-                                  {enrollmentCodeCopyStatus && (
-                                    <Text
-                                      aria-live="polite"
-                                      className="course-code-copy-status"
-                                      role="status"
-                                    >
-                                      {enrollmentCodeCopyStatus}
-                                    </Text>
-                                  )}
-                                </div>
-                              )}
                             </div>
                             {subject.portalNote && (
                               <Text className="detail-link-note">
                                 {subject.portalNote}
                               </Text>
+                            )}
+                            {subject.courseEnrollmentCode && (
+                              <div className="course-enrollment-code">
+                                <button
+                                  aria-expanded={isEnrollmentCodeVisible}
+                                  className="course-code-toggle"
+                                  onClick={() => {
+                                    setIsEnrollmentCodeVisible((visible) => !visible)
+                                    setEnrollmentCodeCopyStatus('')
+                                  }}
+                                  type="button"
+                                >
+                                  {isEnrollmentCodeVisible ? (
+                                    <EyeInvisibleOutlined />
+                                  ) : (
+                                    <EyeOutlined />
+                                  )}
+                                  {isEnrollmentCodeVisible
+                                    ? 'Скрыть кодовое слово'
+                                    : 'Показать кодовое слово'}
+                                </button>
+                                {isEnrollmentCodeVisible && (
+                                  <div className="course-code-value">
+                                    <code>{subject.courseEnrollmentCode}</code>
+                                    <button
+                                      aria-label="Скопировать кодовое слово для записи на курс"
+                                      className="course-code-copy"
+                                      onClick={async () => {
+                                        const enrollmentCode = subject.courseEnrollmentCode
+                                        if (!enrollmentCode) return
+
+                                        try {
+                                          await navigator.clipboard.writeText(
+                                            enrollmentCode,
+                                          )
+                                          setEnrollmentCodeCopyStatus('Кодовое слово скопировано')
+                                        } catch (error) {
+                                          setEnrollmentCodeCopyStatus(
+                                            `Не удалось скопировать код: ${error instanceof Error ? error.message : String(error)}`,
+                                          )
+                                        }
+                                      }}
+                                      title="Скопировать кодовое слово"
+                                      type="button"
+                                    >
+                                      <CopyOutlined />
+                                    </button>
+                                  </div>
+                                )}
+                                {enrollmentCodeCopyStatus && (
+                                  <Text
+                                    aria-live="polite"
+                                    className="course-code-copy-status"
+                                    role="status"
+                                  >
+                                    {enrollmentCodeCopyStatus}
+                                  </Text>
+                                )}
+                              </div>
                             )}
                           </div>
                         )}
