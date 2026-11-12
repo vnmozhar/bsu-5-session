@@ -41,6 +41,7 @@ export interface PublicSubject {
   }[]
   portalUrl: string | null
   portalNote?: string
+  courseEnrollmentCode?: string
   links: readonly {
     title: string
     url: string
@@ -380,7 +381,8 @@ export const publicSubjects: readonly PublicSubject[] = [
     ],
     portalUrl: 'https://edulaw.bsu.by/course/view.php?id=419',
     portalNote:
-      'В локальных материалах есть программа, план семинаров и экзаменационные вопросы; содержимое курса по ссылке отдельно не сверялось. Для записи на курс требуется пароль, он не публикуется в общедоступном дэшборде.',
+      'Сначала войдите на портал под своей учетной записью, затем используйте код для записи на курс.',
+    courseEnrollmentCode: 'agropravo2v',
     materials: [
       {
         title: 'Аграрное право',
