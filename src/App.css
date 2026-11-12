@@ -218,6 +218,12 @@
   font-size: 10px;
 }
 
+.schedule-change-notice {
+  color: #a63d16 !important;
+  font-size: 12px;
+  font-weight: 650;
+}
+
 .today-next-event {
   display: grid;
   gap: 3px;
@@ -703,6 +709,32 @@ button.calendar-day {
   height: 5px;
   border-radius: 50%;
   background: var(--color-accent-gold-dark);
+}
+
+.calendar-change-legend {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 8px;
+  color: #8f3514;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.calendar-change-marker {
+  display: inline-flex;
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #a63d16;
+  border-radius: 50%;
+  background: #fff3e8;
+  color: #8f3514;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .calendar-selection {
@@ -1417,6 +1449,11 @@ button.calendar-day {
   line-height: 1.2;
 }
 
+.weekly-event--changed {
+  border-top: 2px solid #a63d16;
+  box-shadow: inset 0 0 0 1px #d98a54;
+}
+
 .weekly-event--lecture,
 .weekly-event--seminar,
 .weekly-event--practice,
@@ -1470,6 +1507,16 @@ button.calendar-day {
 
 .weekly-event-kind {
   font-weight: 600;
+}
+
+.weekly-event-change {
+  overflow: visible !important;
+  color: #8f3514 !important;
+  font-size: 8px !important;
+  font-weight: 700;
+  line-height: 1.1 !important;
+  text-overflow: clip !important;
+  white-space: normal;
 }
 
 .subjects-section {
@@ -1802,7 +1849,7 @@ button.calendar-day {
 
 .calendar-event-markers {
   display: flex;
-  min-height: 7px;
+  min-height: 13px;
   align-items: center;
   justify-content: center;
   gap: 3px;

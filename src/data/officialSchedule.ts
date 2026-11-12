@@ -18,6 +18,7 @@ export interface OfficialScheduleEntry {
   group: string
   location?: string
   preparation?: string
+  scheduleChange?: { previousTime: string }
 }
 
 type ScheduleTrack = 'ОБЩ' | 'СПС' | 'ХОЗ'
@@ -39,6 +40,7 @@ function event(
   subject: string,
   instructor: string,
   cohort?: StudyCohort,
+  scheduleChange?: OfficialScheduleEntry['scheduleChange'],
 ): OfficialScheduleEntry {
   const subjectId = subjectIds.get(subject)
 
@@ -50,6 +52,7 @@ function event(
     subject,
     instructor,
     group: cohort ? `${track} · ${cohort}` : track,
+    ...(scheduleChange ? { scheduleChange } : {}),
   }
 }
 
@@ -88,7 +91,7 @@ export const officialSchedule: readonly OfficialScheduleEntry[] = [
   event('2026-11-18', '20:20-21:40', 'ХОЗ', 'Семинар', 'Криминология', 'доц. Городецкая М.А.', '2-я группа'),
 
   event('2026-11-19', '09:00', 'ХОЗ', 'Зачет', 'Право собственности и другие вещные права', 'ст. преподаватель Реуцкая Е.А.', '2-я группа'),
-  event('2026-11-19', '09:30', 'СПС', 'Зачет', 'Судебная экспертиза', 'доц. Лапина И.А.', '1-я группа'),
+  event('2026-11-19', '09:00', 'СПС', 'Зачет', 'Судебная экспертиза', 'доц. Лапина И.А.', '1-я группа', { previousTime: '09:30' }),
   event('2026-11-19', '14:10-15:30', 'СПС', 'Семинар', 'Правовой режим природных ресурсов', 'доц. Мороз О.В.', '1-я группа'),
   event('2026-11-19', '14:10-15:30', 'ХОЗ', 'Семинар', 'Право интеллектуальной собственности', 'доц. Сидорчук В.К.', '2-я группа'),
   event('2026-11-19', '15:50-17:10', 'СПС', 'Семинар', 'Право интеллектуальной собственности', 'доц. Сидорчук В.К.', '1-я группа'),
@@ -212,4 +215,4 @@ export const officialSchedule: readonly OfficialScheduleEntry[] = [
 ]
 
 export const officialScheduleSource =
-  'Расписание лабораторно-экзаменационной сессии 2026/2027 учебного года, 4 курс, заочная форма, страницы 1-5 предоставленного PDF. Аудитории в документе не указаны.'
+  'Расписание лабораторно-экзаменационной сессии 2026/2027 учебного года, 4 курс, заочная форма, страницы 1-5 предоставленного PDF. Пользователь сообщил об изменении времени зачета по судебной экспертизе 19.11.2026 с 09:30 на 09:00. Аудитории в документе не указаны.'
