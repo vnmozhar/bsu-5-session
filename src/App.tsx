@@ -989,6 +989,9 @@ function App() {
     (event) => event.date === effectiveSubjectDate,
   )
   const subjectByName = new Map(publicSubjects.map((subject) => [subject.name, subject]))
+  const sessionOverviewEvents = officialSchedule.filter((event) =>
+    isScheduleEventVisible(event.group, selectedGroup),
+  )
   const subjectsFor = (events: typeof officialSchedule[number][]) =>
     Array.from(
       events.reduce((subjects, event) => {
@@ -1000,7 +1003,7 @@ function App() {
         .entries(),
       ([name, events]) => ({ name, events }),
     )
-  const assessmentEvents = officialSchedule.filter(
+  const assessmentEvents = sessionOverviewEvents.filter(
     (event) => event.kind === 'Экзамен' || event.kind === 'Зачет',
   )
   const assessmentTracksBySubject = new Map<string, Set<string>>()
@@ -1025,7 +1028,7 @@ function App() {
   const examSubjects = subjectsFor(assessmentEvents.filter((event) => event.kind === 'Экзамен'))
   const creditSubjects = subjectsFor(assessmentEvents.filter((event) => event.kind === 'Зачет'))
   const noAssessmentSubjects = subjectsFor(
-    officialSchedule.filter((event) => {
+    sessionOverviewEvents.filter((event) => {
       if (event.kind === 'Экзамен' || event.kind === 'Зачет') return false
 
       const assessedTracks = assessmentTracksBySubject.get(event.subject)
