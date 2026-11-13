@@ -1433,9 +1433,10 @@ function App() {
                 {renderSessionSubjects(noAssessmentSubjects, 'noAssessment')}
               </article>
 
+              <div className="session-overview-support-column">
               <article className="session-overview-item">
                 <div className="session-overview-item-heading">
-                  <Title level={3}>Курсовая</Title>
+                  <Title level={3}>Курсовая и контрольная работа</Title>
                   <Tag color="gold">по предоставленной информации</Tag>
                 </div>
                 <Text className="session-overview-note">
@@ -1545,53 +1546,52 @@ function App() {
                     Методические рекомендации юрфака БГУ, 2024 (PDF)
                   </a>
                 </div>
-              </article>
-              <div className="session-overview-support-column">
-              <article className="session-overview-item">
-                <div className="session-overview-item-heading">
-                  <Title level={3}>Контрольная работа</Title>
-                  <Tag>{controlWorkSubjects.length}</Tag>
-                </div>
-                {controlWorkSubjects.length > 0 ? (
-                  <ul className="session-subject-list">
-                    {controlWorkSubjects.map((subject) => (
-                      <li key={subject.id}>
-                        <a href={`/subjects/${subject.id}`}>{subject.name}</a>
-                        <details className="control-work-details">
-                          <summary>{subject.controlWork?.status}</summary>
-                          {(subject.materials ?? [])
-                            .filter((material) =>
-                              /контрольной работе/i.test(material.title),
-                            )
-                            .map((material) => (
-                              <a
-                                className="material-link"
-                                download
-                                href={material.href}
-                                key={material.href}
-                              >
-                                <FileTextOutlined />
-                                <span>{material.title}</span>
-                                <Text className="material-format">
-                                  {material.format}
-                                </Text>
-                                <DownloadOutlined />
-                              </a>
-                            ))}
-                          {subject.controlWork?.caution && (
-                            <Text className="session-overview-caution">
-                              {subject.controlWork.caution}
-                            </Text>
-                          )}
-                        </details>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <Text className="session-overview-note">
-                    Предмет пока не указан
-                  </Text>
-                )}
+                <section className="coursework-control-work">
+                  <div className="session-overview-item-heading">
+                    <Title level={4}>Контрольная работа</Title>
+                    <Tag>{controlWorkSubjects.length}</Tag>
+                  </div>
+                  {controlWorkSubjects.length > 0 ? (
+                    <ul className="session-subject-list">
+                      {controlWorkSubjects.map((subject) => (
+                        <li key={subject.id}>
+                          <a href={`/subjects/${subject.id}`}>{subject.name}</a>
+                          <details className="control-work-details">
+                            <summary>{subject.controlWork?.status}</summary>
+                            {(subject.materials ?? [])
+                              .filter((material) =>
+                                /контрольной работе/i.test(material.title),
+                              )
+                              .map((material) => (
+                                <a
+                                  className="material-link"
+                                  download
+                                  href={material.href}
+                                  key={material.href}
+                                >
+                                  <FileTextOutlined />
+                                  <span>{material.title}</span>
+                                  <Text className="material-format">
+                                    {material.format}
+                                  </Text>
+                                  <DownloadOutlined />
+                                </a>
+                              ))}
+                            {subject.controlWork?.caution && (
+                              <Text className="session-overview-caution">
+                                {subject.controlWork.caution}
+                              </Text>
+                            )}
+                          </details>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <Text className="session-overview-note">
+                      Предмет пока не указан
+                    </Text>
+                  )}
+                </section>
               </article>
 
               <article className="session-overview-item practice-overview">
@@ -1670,30 +1670,30 @@ function App() {
                     <details className="practice-collapsible">
                       <summary>Образцы гарантийных писем (2)</summary>
                       <div className="practice-collapsible-content">
-                      <a
-                        className="practice-material-link"
-                        download
-                        href="/materials/practice/guarantee-law-enforcement-practice.docx"
-                      >
-                        <FileTextOutlined />
-                        <span>Для правоприменительной практики, 1-13 февраля</span>
-                        <Text className="material-format">DOCX</Text>
-                        <DownloadOutlined />
-                      </a>
-                      <a
-                        className="practice-material-link"
-                        download
-                        href="/materials/practice/guarantee-both-practices.docx"
-                      >
-                        <FileTextOutlined />
-                        <span>Для обеих практик, 1-27 февраля</span>
-                        <Text className="material-format">DOCX</Text>
-                        <DownloadOutlined />
-                      </a>
-                      <Text className="practice-form-caution">
-                        Второй шаблон назван учебным, но в тексте охватывает
-                        правоприменительную и профессионально-ориентированную практики.
-                      </Text>
+                        <a
+                          className="practice-material-link"
+                          download
+                          href="/materials/practice/guarantee-law-enforcement-practice.docx"
+                        >
+                          <FileTextOutlined />
+                          <span>Для правоприменительной практики, 1-13 февраля</span>
+                          <Text className="material-format">DOCX</Text>
+                          <DownloadOutlined />
+                        </a>
+                        <a
+                          className="practice-material-link"
+                          download
+                          href="/materials/practice/guarantee-both-practices.docx"
+                        >
+                          <FileTextOutlined />
+                          <span>Для обеих практик, 1-27 февраля</span>
+                          <Text className="material-format">DOCX</Text>
+                          <DownloadOutlined />
+                        </a>
+                        <Text className="practice-form-caution">
+                          Второй шаблон назван учебным, но в тексте охватывает
+                          правоприменительную и профессионально-ориентированную практики.
+                        </Text>
                       </div>
                     </details>
                   </div>
