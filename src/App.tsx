@@ -36,6 +36,7 @@ import {
   preliminarySchedule,
   publicSubjects,
   sessionRange,
+  type PublicSubject,
 } from './data/publicSubjects'
 import {
   officialSchedule,
@@ -754,7 +755,7 @@ function App() {
   const currentPath = window.location.pathname.replace(/\/+$/, '') || '/'
   const isSubjectPath = currentPath.startsWith('/subjects/')
   const isSchedulePath = currentPath === '/schedule'
-  const selectedSubject = publicSubjects.find(
+  const publicSubject = publicSubjects.find(
     (subject) => currentPath === `/subjects/${subject.id}`,
   )
   const publicSubjectNames = new Set(publicSubjects.map((subject) => subject.name))
@@ -772,6 +773,41 @@ function App() {
   const selectedScheduleSubjectName = scheduleOnlySubjectNames.find(
     (name) => scheduleSubjectPaths.get(name) === currentPath,
   )
+  const selectedScheduleSubject = selectedScheduleSubjectName
+    ? officialSchedule.filter((event) => event.subject === selectedScheduleSubjectName)
+    : []
+  const selectedSubject: PublicSubject | undefined = publicSubject ??
+    (selectedScheduleSubjectName
+      ? {
+          id: `schedule-${getScheduleSubjectSlug(selectedScheduleSubjectName)}`,
+          name: selectedScheduleSubjectName,
+          department: null,
+          instructor: {
+            name: [...new Set(selectedScheduleSubject.map((event) => event.instructor))]
+              .filter(Boolean)
+              .join(', ') || 'Информация не указана',
+            position: '',
+          },
+          assessment: {
+            type: selectedScheduleSubject.some((event) => event.kind === 'Экзамен')
+              ? 'Экзамен'
+              : selectedScheduleSubject.some((event) => event.kind === 'Зачет')
+                ? 'Зачет'
+                : 'Не указана',
+            format: 'Смотрите опубликованное расписание',
+            source: 'Официальное расписание сессии',
+          },
+          courseInfo: [],
+          requirements: [],
+          topicGroups: [],
+          topicItems: [],
+          analysis: [],
+          portalUrl: null,
+          links: [],
+          comments: [],
+        }
+      : undefined)
+  const isScheduleOnlySubject = Boolean(selectedScheduleSubjectName)
   const hasOfficialSchedule = officialSchedule.length > 0
   const calendarEvents: readonly CalendarEvent[] = hasOfficialSchedule
     ? officialSchedule.map((event) => ({
@@ -787,17 +823,6 @@ function App() {
   const calendarEventKinds = [...new Set(calendarEvents.map((event) => event.kind))]
   const [selectedEventKinds, setSelectedEventKinds] = useState<string[] | null>(null)
   const activeEventKinds = selectedEventKinds ?? calendarEventKinds
-  const selectedScheduleSubjectEvents = selectedScheduleSubjectName
-    ? officialSchedule
-        .filter((event) =>
-          event.subject === selectedScheduleSubjectName &&
-          isScheduleEventVisible(event.group, selectedGroup) &&
-          activeEventKinds.includes(event.kind),
-        )
-        .sort((first, second) =>
-          first.date.localeCompare(second.date) || first.time.localeCompare(second.time),
-        )
-    : []
   const visibleCalendarEvents = calendarEvents.filter((event) =>
     isScheduleEventVisible(event.group, selectedGroup) &&
     activeEventKinds.includes(event.kind),
@@ -846,9 +871,10 @@ function App() {
   const subjectSchedule = selectedSubject
     ? officialSchedule.filter(
         (event) =>
-          event.subjectId === selectedSubject.id &&
-        isScheduleEventVisible(event.group, selectedGroup) &&
-        activeEventKinds.includes(event.kind),
+        (event.subjectId === selectedSubject.id ||
+          (!event.subjectId && event.subject === selectedSubject.name)) &&
+      isScheduleEventVisible(event.group, selectedGroup) &&
+      activeEventKinds.includes(event.kind),
     )
     : []
   const visibleOfficialSchedule = officialSchedule.filter((event) =>
@@ -1769,23 +1795,16 @@ function App() {
                 <a className="back-link" href="/">
                   <ArrowLeftOutlined /> Все предметы
                 </a>
-                <Text className="section-kicker">СТРАНИЦА ПРЕДМЕТА</Text>
+                <Text className="section-kicker">
+                  {isScheduleOnlySubject ? 'РАСПИСАНИЕ ПРЕДМЕТА' : 'СТРАНИЦА ПРЕДМЕТА'}
+                </Text>
                 <Title id="subjects-title" level={2}>
                   {selectedSubject.name}
                 </Title>
-                <Text type="secondary">Информация о курсе и материалы</Text>
-              </div>
-            ) : selectedScheduleSubjectName ? (
-              <div className="subject-page-heading">
-                <a className="back-link" href="/">
-                  <ArrowLeftOutlined /> На главную
-                </a>
-                <Text className="section-kicker">РАСПИСАНИЕ ПРЕДМЕТА</Text>
-                <Title id="subjects-title" level={2}>
-                  {selectedScheduleSubjectName}
-                </Title>
                 <Text type="secondary">
-                  В проекте пока есть только сведения из расписания, без отдельной карточки курса.
+                  {isScheduleOnlySubject
+                    ? 'Дополнительная информация о курсе в проекте пока не добавлена.'
+                    : 'Информация о курсе и материалы'}
                 </Text>
               </div>
             ) : isSubjectPath ? (
@@ -1821,53 +1840,6 @@ function App() {
 
           {isSubjectPath && !selectedSubject && !selectedScheduleSubjectName ? (
             <Empty description="Проверьте ссылку на предмет" />
-          ) : selectedScheduleSubjectName ? (
-            <Card className="schedule-only-subject-card" variant="borderless">
-              <div className="schedule-only-subject-controls">
-                <ScheduleGroupSelector
-                  onChange={handleGroupChange}
-                  selectedGroup={selectedGroup}
-                />
-                <ScheduleKindSelector
-                  kinds={calendarEventKinds}
-                  onChange={handleEventKindsChange}
-                  selectedKinds={activeEventKinds}
-                />
-              </div>
-              {selectedScheduleSubjectEvents.length > 0 ? (
-                <div className="subject-schedule-list">
-                  {selectedScheduleSubjectEvents.map((event) => (
-                    <article
-                      className="subject-schedule-event"
-                      key={`${event.date}-${event.time}-${event.group}`}
-                    >
-                      <div className="subject-event-meta">
-                        <Text className="schedule-date-value">
-                          {formatScheduleDate(event.date)}
-                        </Text>
-                        <Tag
-                          className="subject-event-kind"
-                          color={getScheduleEventKindStyle(event.kind).tagColor}
-                        >
-                          {event.kind}
-                        </Tag>
-                      </div>
-                      <Text strong>{event.time}</Text>
-                      {event.scheduleChange && (
-                        <Tag color="volcano">
-                          Перенос времени: было {event.scheduleChange.previousTime}
-                        </Tag>
-                      )}
-                      <Text>{event.group}</Text>
-                      {event.instructor && <Text>{event.instructor}</Text>}
-                      {event.location && <Text>Аудитория: {event.location}</Text>}
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <Empty description="В расписании нет событий для выбранных фильтров" />
-              )}
-            </Card>
           ) : (selectedSubject ? [selectedSubject] : filteredSubjects).length > 0 ? (
             <Row gutter={[20, 20]} align="stretch">
               {(selectedSubject ? [selectedSubject] : filteredSubjects).map((subject) => (
@@ -1888,7 +1860,15 @@ function App() {
                     </Title>
 
                     <div className="assessment-info">
-                      <Tag color={subject.assessment.type === 'Экзамен' ? 'blue' : 'green'}>
+                      <Tag
+                        color={
+                          subject.assessment.type === 'Экзамен'
+                            ? 'blue'
+                            : subject.assessment.type === 'Зачет'
+                              ? 'green'
+                              : 'default'
+                        }
+                      >
                         {subject.assessment.type}
                       </Tag>
                       <Text>{subject.assessment.format}</Text>
@@ -1912,7 +1892,7 @@ function App() {
                       </div>
                     </div>
 
-                    <div className="subject-overview-sections">
+                    {!isScheduleOnlySubject && <div className="subject-overview-sections">
                       <section className="detail-section course-info">
                         <div className="detail-heading">
                           <BookOutlined />
@@ -2044,7 +2024,7 @@ function App() {
                           </Text>
                         )}
                       </section>
-                    </div>
+                    </div>}
 
                     {selectedSubject && (
                       <section
@@ -2150,7 +2130,7 @@ function App() {
                       </div>
                     )}
 
-                    {selectedSubject && <div className="subject-sections">
+                    {selectedSubject && !isScheduleOnlySubject && <div className="subject-sections">
                       {subject.materials && subject.materials.length > 0 && (
                         <details className="detail-accordion material-accordion">
                           <summary>

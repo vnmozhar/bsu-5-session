@@ -1572,17 +1572,6 @@ button.calendar-day {
   margin: 0 auto;
 }
 
-.schedule-only-subject-card.ant-card {
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.schedule-only-subject-controls {
-  display: grid;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
 .subject-detail-card .subject-title,
 .subject-detail-card .subject-page-link {
   display: none;

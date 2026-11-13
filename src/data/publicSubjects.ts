@@ -7,7 +7,7 @@ export interface PublicSubject {
     position: string
   }
   assessment: {
-    type: 'Экзамен' | 'Зачет'
+    type: 'Экзамен' | 'Зачет' | 'Не указана'
     format: string
     source: string
   }
