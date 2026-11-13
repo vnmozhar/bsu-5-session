@@ -60,6 +60,12 @@ interface CalendarEvent {
   changeNotice?: string
 }
 
+const sessionTrackSections = [
+  { key: 'СПС', title: 'СПСД', detail: 'Группа 1' },
+  { key: 'ХОЗ', title: 'ХОЗ', detail: 'Группа 2' },
+  { key: 'ОБЩ', title: 'Общие занятия', detail: 'Для обеих групп' },
+] as const
+
 const scheduleEventKindStyles: Record<string, { className: string; tagColor: string }> = {
   Лекция: { className: 'lecture', tagColor: 'blue' },
   Семинар: { className: 'seminar', tagColor: 'cyan' },
@@ -928,65 +934,91 @@ function App() {
   const selectedSubjectEvents = subjectSchedule.filter(
     (event) => event.date === effectiveSubjectDate,
   )
-  const examSubjects = publicSubjects.filter(
-    (subject) => subject.assessment.type === 'Экзамен',
-  )
-  const creditSubjects = publicSubjects.filter(
-    (subject) => subject.assessment.type === 'Зачет',
-  )
-  const assessmentScheduleBySubject = new Map(
-    publicSubjects.map((subject) => [
-      subject.id,
-      officialSchedule
-        .filter((event) =>
-          event.subjectId === subject.id &&
-          (event.kind === 'Экзамен' || event.kind === 'Зачет') &&
-          isScheduleEventVisible(event.group, selectedGroup),
-        )
-        .map((event) => ({
-          date: event.date,
-          time: event.time,
-          group: event.group,
-          kind: event.kind,
-          location: event.location,
-          changeNotice: getScheduleChangeNotice(event.scheduleChange, event.time),
-        })),
-    ]),
-  )
-  const renderAssessmentSchedule = (subject: typeof publicSubjects[number]) => {
-    const assessments = assessmentScheduleBySubject.get(subject.id) ?? []
-
-    return (
-        <li key={subject.id}>
-          <div className="session-subject-row">
-            <a href={`/subjects/${subject.id}`}>{subject.name}</a>
-            {assessments.length > 0 ? (
-              <span className="session-assessment-schedule">
-                {assessments.map((assessment) => (
-                  <span
-                    className="session-assessment-occurrence"
-                    key={`${assessment.date}-${assessment.time}-${assessment.group}`}
-                  >
-                    <Tag color={assessment.kind === 'Экзамен' ? 'blue' : 'green'}>
-                      {formatScheduleDate(assessment.date)} · {assessment.time}
-                      {assessment.location ? ` · ауд. ${assessment.location}` : ''}
-                    </Tag>
-                    {assessment.changeNotice && (
-                      <Tag color="volcano">{assessment.changeNotice}</Tag>
-                    )}
-                    {assessment.group}
-                  </span>
-                ))}
-              </span>
-            ) : (
-              <Text className="session-assessment-missing">
-                В расписании не указано для этой группы
-              </Text>
-            )}
-          </div>
-        </li>
+  const subjectByName = new Map(publicSubjects.map((subject) => [subject.name, subject]))
+  const sessionTracks = sessionTrackSections.map((track) => {
+    const trackEvents = officialSchedule.filter(
+      (event) => event.group === track.key || event.group.startsWith(`${track.key} ·`),
     )
-  }
+    const assessmentEvents = trackEvents.filter(
+      (event) => event.kind === 'Экзамен' || event.kind === 'Зачет',
+    )
+    const subjectsFor = (events: typeof officialSchedule[number][]) =>
+      Array.from(
+        events.reduce((subjects, event) => {
+          const subjectEvents = subjects.get(event.subject) ?? []
+          subjectEvents.push(event)
+          subjects.set(event.subject, subjectEvents)
+          return subjects
+        }, new Map<string, typeof officialSchedule[number][]>())
+          .entries(),
+        ([name, events]) => ({ name, events }),
+      )
+    const assessedSubjectNames = new Set(assessmentEvents.map((event) => event.subject))
+
+    return {
+      ...track,
+      exams: subjectsFor(assessmentEvents.filter((event) => event.kind === 'Экзамен')),
+      credits: subjectsFor(assessmentEvents.filter((event) => event.kind === 'Зачет')),
+      noAssessment: subjectsFor(
+        trackEvents.filter(
+          (event) =>
+            event.kind !== 'Экзамен' &&
+            event.kind !== 'Зачет' &&
+            !assessedSubjectNames.has(event.subject),
+        ),
+      ),
+    }
+  })
+  const renderSessionSubjects = (
+    subjects: { name: string; events: typeof officialSchedule[number][] }[],
+    category: 'assessment' | 'noAssessment',
+  ) => (
+    subjects.length > 0 ? (
+      <ul className="session-subject-list">
+        {subjects.map(({ name, events }) => {
+          const subject = subjectByName.get(name)
+          const eventKinds = [...new Set(events.map((event) => event.kind))]
+
+          return (
+            <li key={name}>
+              <div className="session-subject-row">
+                {subject ? <a href={`/subjects/${subject.id}`}>{name}</a> : <Text strong>{name}</Text>}
+                {category === 'assessment' ? (
+                  <span className="session-assessment-schedule">
+                    {events.map((event) => (
+                      <span
+                        className="session-assessment-occurrence"
+                        key={`${event.date}-${event.time}-${event.group}`}
+                      >
+                        <Tag color={event.kind === 'Экзамен' ? 'blue' : 'green'}>
+                          {formatScheduleDate(event.date)} · {event.time}
+                          {event.location ? ` · ауд. ${event.location}` : ''}
+                        </Tag>
+                        {event.scheduleChange && (
+                          <Tag color="volcano">
+                            Перенос времени: было {event.scheduleChange.previousTime}
+                          </Tag>
+                        )}
+                        {event.group.includes('подгруппа') && (
+                          <Text>{event.group.split(' · ').slice(1).join(' · ')}</Text>
+                        )}
+                      </span>
+                    ))}
+                  </span>
+                ) : (
+                  <Text className="session-assessment-missing">
+                    Занятия: {eventKinds.join(', ')}. Аттестация в расписании не указана.
+                  </Text>
+                )}
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+    ) : (
+      <Text className="session-assessment-missing">Предметы не указаны</Text>
+    )
+  )
   const courseworkDepartments = Array.from(
     publicSubjects.reduce<Map<string, typeof publicSubjects[number][]>>((departments, subject) => {
       if (subject.department) {
@@ -1287,29 +1319,41 @@ function App() {
                 Что в сессии
               </Title>
               <Text type="secondary">
-                Даты и время указаны по опубликованному расписанию для выбранной группы.
+                Предметы и аттестации разделены по группам. Общие занятия вынесены отдельно.
               </Text>
             </div>
-            <div className="session-overview-grid">
-              <article className="session-overview-item">
-                <div className="session-overview-item-heading">
-                  <Title level={3}>Экзамены</Title>
-                  <Tag color="blue">{examSubjects.length}</Tag>
-                </div>
-                <ul className="session-subject-list">
-                  {examSubjects.map(renderAssessmentSchedule)}
-                </ul>
-              </article>
-
-              <article className="session-overview-item">
-                <div className="session-overview-item-heading">
-                  <Title level={3}>Зачеты</Title>
-                  <Tag color="green">{creditSubjects.length}</Tag>
-                </div>
-                <ul className="session-subject-list">
-                  {creditSubjects.map(renderAssessmentSchedule)}
-                </ul>
-              </article>
+            <div className="session-overview-grid session-track-grid">
+              {sessionTracks.map((track) => (
+                <article
+                  className={`session-overview-item session-track-card${track.key === 'ОБЩ' ? ' session-track-card--common' : ''}`}
+                  key={track.key}
+                >
+                  <div className="session-track-heading">
+                    <Title level={3}>{track.title}</Title>
+                    <Tag>{track.detail}</Tag>
+                  </div>
+                  {track.exams.length > 0 && (
+                    <section className="session-track-category">
+                      <Text className="session-track-category-title">Экзамены</Text>
+                      {renderSessionSubjects(track.exams, 'assessment')}
+                    </section>
+                  )}
+                  {track.credits.length > 0 && (
+                    <section className="session-track-category">
+                      <Text className="session-track-category-title">Зачеты</Text>
+                      {renderSessionSubjects(track.credits, 'assessment')}
+                    </section>
+                  )}
+                  {track.noAssessment.length > 0 && (
+                    <section className="session-track-category">
+                      <Text className="session-track-category-title">
+                        Дисциплины без указанной аттестации
+                      </Text>
+                      {renderSessionSubjects(track.noAssessment, 'noAssessment')}
+                    </section>
+                  )}
+                </article>
+              ))}
 
               <article className="session-overview-item">
                 <div className="session-overview-item-heading">
