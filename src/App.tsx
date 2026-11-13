@@ -948,6 +948,7 @@ function App() {
           time: event.time,
           group: event.group,
           kind: event.kind,
+          location: event.location,
           changeNotice: getScheduleChangeNotice(event.scheduleChange, event.time),
         })),
     ]),
@@ -968,6 +969,7 @@ function App() {
                   >
                     <Tag color={assessment.kind === 'Экзамен' ? 'blue' : 'green'}>
                       {formatScheduleDate(assessment.date)} · {assessment.time}
+                      {assessment.location ? ` · ауд. ${assessment.location}` : ''}
                     </Tag>
                     {assessment.changeNotice && (
                       <Tag color="volcano">{assessment.changeNotice}</Tag>
