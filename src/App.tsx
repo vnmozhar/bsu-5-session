@@ -1546,7 +1546,7 @@ function App() {
                   </a>
                 </div>
               </article>
-
+              <div className="session-overview-support-column">
               <article className="session-overview-item">
                 <div className="session-overview-item-heading">
                   <Title level={3}>Контрольная работа</Title>
@@ -1699,6 +1699,7 @@ function App() {
                   </div>
                 </div>
               </article>
+              </div>
             </div>
           </section>
         )}

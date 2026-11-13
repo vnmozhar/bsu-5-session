@@ -861,6 +861,13 @@ button.calendar-day {
   gap: 22px 28px;
 }
 
+.session-overview-support-column {
+  display: grid;
+  align-content: start;
+  gap: 22px;
+  grid-column: 2;
+}
+
 .session-subject-title {
   display: inline-flex;
   align-items: center;
@@ -2267,6 +2274,11 @@ button.calendar-day {
   .session-overview-grid {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+
+  .session-overview-support-column {
+    gap: 8px;
+    grid-column: 1;
   }
 
   .practice-periods,
