@@ -95,6 +95,14 @@ function getScheduleChangeNotice(
     : undefined
 }
 
+function getScheduleSubjectSlug(subject: string) {
+  return subject
+    .toLocaleLowerCase('ru')
+    .replace(/ё/g, 'е')
+    .replace(/[^а-яa-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
 function isScheduleEventVisible(group: string | undefined, selectedGroup: StudyGroup) {
   if (selectedGroup === 'ОБЩ') return true
 
@@ -749,6 +757,21 @@ function App() {
   const selectedSubject = publicSubjects.find(
     (subject) => currentPath === `/subjects/${subject.id}`,
   )
+  const publicSubjectNames = new Set(publicSubjects.map((subject) => subject.name))
+  const scheduleOnlySubjectNames = [...new Set(
+    officialSchedule
+      .map((event) => event.subject)
+      .filter((name) => !publicSubjectNames.has(name)),
+  )]
+  const scheduleSubjectPaths = new Map(
+    scheduleOnlySubjectNames.map((name) => [
+      name,
+      `/subjects/schedule-${encodeURIComponent(getScheduleSubjectSlug(name))}`,
+    ]),
+  )
+  const selectedScheduleSubjectName = scheduleOnlySubjectNames.find(
+    (name) => scheduleSubjectPaths.get(name) === currentPath,
+  )
   const hasOfficialSchedule = officialSchedule.length > 0
   const calendarEvents: readonly CalendarEvent[] = hasOfficialSchedule
     ? officialSchedule.map((event) => ({
@@ -764,6 +787,17 @@ function App() {
   const calendarEventKinds = [...new Set(calendarEvents.map((event) => event.kind))]
   const [selectedEventKinds, setSelectedEventKinds] = useState<string[] | null>(null)
   const activeEventKinds = selectedEventKinds ?? calendarEventKinds
+  const selectedScheduleSubjectEvents = selectedScheduleSubjectName
+    ? officialSchedule
+        .filter((event) =>
+          event.subject === selectedScheduleSubjectName &&
+          isScheduleEventVisible(event.group, selectedGroup) &&
+          activeEventKinds.includes(event.kind),
+        )
+        .sort((first, second) =>
+          first.date.localeCompare(second.date) || first.time.localeCompare(second.time),
+        )
+    : []
   const visibleCalendarEvents = calendarEvents.filter((event) =>
     isScheduleEventVisible(event.group, selectedGroup) &&
     activeEventKinds.includes(event.kind),
@@ -995,7 +1029,13 @@ function App() {
             <li key={name}>
               <div className="session-subject-row">
                 <span className="session-subject-title">
-                  {subject ? <a href={`/subjects/${subject.id}`}>{name}</a> : <Text strong>{name}</Text>}
+                  {subject ? (
+                    <a href={`/subjects/${subject.id}`}>{name}</a>
+                  ) : scheduleSubjectPaths.has(name) ? (
+                    <a href={scheduleSubjectPaths.get(name)}>{name}</a>
+                  ) : (
+                    <Text strong>{name}</Text>
+                  )}
                   {category === 'noAssessment' &&
                     specializedTracks.map((track) => <Tag key={track}>{track}</Tag>)}
                 </span>
@@ -1735,6 +1775,19 @@ function App() {
                 </Title>
                 <Text type="secondary">Информация о курсе и материалы</Text>
               </div>
+            ) : selectedScheduleSubjectName ? (
+              <div className="subject-page-heading">
+                <a className="back-link" href="/">
+                  <ArrowLeftOutlined /> На главную
+                </a>
+                <Text className="section-kicker">РАСПИСАНИЕ ПРЕДМЕТА</Text>
+                <Title id="subjects-title" level={2}>
+                  {selectedScheduleSubjectName}
+                </Title>
+                <Text type="secondary">
+                  В проекте пока есть только сведения из расписания, без отдельной карточки курса.
+                </Text>
+              </div>
             ) : isSubjectPath ? (
               <div className="subject-page-heading">
                 <a className="back-link" href="/">
@@ -1766,8 +1819,55 @@ function App() {
             )}
           </div>
 
-          {isSubjectPath && !selectedSubject ? (
+          {isSubjectPath && !selectedSubject && !selectedScheduleSubjectName ? (
             <Empty description="Проверьте ссылку на предмет" />
+          ) : selectedScheduleSubjectName ? (
+            <Card className="schedule-only-subject-card" variant="borderless">
+              <div className="schedule-only-subject-controls">
+                <ScheduleGroupSelector
+                  onChange={handleGroupChange}
+                  selectedGroup={selectedGroup}
+                />
+                <ScheduleKindSelector
+                  kinds={calendarEventKinds}
+                  onChange={handleEventKindsChange}
+                  selectedKinds={activeEventKinds}
+                />
+              </div>
+              {selectedScheduleSubjectEvents.length > 0 ? (
+                <div className="subject-schedule-list">
+                  {selectedScheduleSubjectEvents.map((event) => (
+                    <article
+                      className="subject-schedule-event"
+                      key={`${event.date}-${event.time}-${event.group}`}
+                    >
+                      <div className="subject-event-meta">
+                        <Text className="schedule-date-value">
+                          {formatScheduleDate(event.date)}
+                        </Text>
+                        <Tag
+                          className="subject-event-kind"
+                          color={getScheduleEventKindStyle(event.kind).tagColor}
+                        >
+                          {event.kind}
+                        </Tag>
+                      </div>
+                      <Text strong>{event.time}</Text>
+                      {event.scheduleChange && (
+                        <Tag color="volcano">
+                          Перенос времени: было {event.scheduleChange.previousTime}
+                        </Tag>
+                      )}
+                      <Text>{event.group}</Text>
+                      {event.instructor && <Text>{event.instructor}</Text>}
+                      {event.location && <Text>Аудитория: {event.location}</Text>}
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <Empty description="В расписании нет событий для выбранных фильтров" />
+              )}
+            </Card>
           ) : (selectedSubject ? [selectedSubject] : filteredSubjects).length > 0 ? (
             <Row gutter={[20, 20]} align="stretch">
               {(selectedSubject ? [selectedSubject] : filteredSubjects).map((subject) => (
