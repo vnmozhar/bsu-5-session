@@ -117,6 +117,44 @@ function isScheduleEventVisible(group: string | undefined, selectedGroup: StudyG
   return groupAliases.some((alias) => normalizedGroup.includes(alias))
 }
 
+const publicSubjectNames = new Set(publicSubjects.map((subject) => subject.name))
+const scheduleOnlySubjects: PublicSubject[] = [...new Set(
+  officialSchedule
+    .map((event) => event.subject)
+    .filter((name) => !publicSubjectNames.has(name)),
+)].map((name) => {
+  const events = officialSchedule.filter((event) => event.subject === name)
+
+  return {
+    id: `schedule-${getScheduleSubjectSlug(name)}`,
+    name,
+    department: null,
+    instructor: {
+      name: [...new Set(events.map((event) => event.instructor))]
+        .filter(Boolean)
+        .join(', ') || 'Информация не указана',
+      position: '',
+    },
+    assessment: {
+      type: events.some((event) => event.kind === 'Экзамен')
+        ? 'Экзамен'
+        : events.some((event) => event.kind === 'Зачет')
+          ? 'Зачет'
+          : 'Не указана',
+      format: 'Смотрите опубликованное расписание',
+      source: 'Официальное расписание сессии',
+    },
+    courseInfo: [],
+    requirements: [],
+    topicGroups: [],
+    topicItems: [],
+    analysis: [],
+    portalUrl: null,
+    links: [],
+    comments: [],
+  }
+})
+
 function getTimeValues(time: string) {
   return Array.from(time.matchAll(/\b(\d{1,2})[:.](\d{2})\b/g), (match) =>
     Number(match[1]) * 60 + Number(match[2]),
@@ -758,55 +796,19 @@ function App() {
   const publicSubject = publicSubjects.find(
     (subject) => currentPath === `/subjects/${subject.id}`,
   )
-  const publicSubjectNames = new Set(publicSubjects.map((subject) => subject.name))
-  const scheduleOnlySubjectNames = [...new Set(
-    officialSchedule
-      .map((event) => event.subject)
-      .filter((name) => !publicSubjectNames.has(name)),
-  )]
   const scheduleSubjectPaths = new Map(
-    scheduleOnlySubjectNames.map((name) => [
+    scheduleOnlySubjects.map(({ name }) => [
       name,
       `/subjects/schedule-${encodeURIComponent(getScheduleSubjectSlug(name))}`,
     ]),
   )
-  const selectedScheduleSubjectName = scheduleOnlySubjectNames.find(
-    (name) => scheduleSubjectPaths.get(name) === currentPath,
-  )
-  const selectedScheduleSubject = selectedScheduleSubjectName
-    ? officialSchedule.filter((event) => event.subject === selectedScheduleSubjectName)
-    : []
+  const selectedScheduleSubjectName = scheduleOnlySubjects
+    .map(({ name }) => name)
+    .find(
+      (name) => scheduleSubjectPaths.get(name) === currentPath,
+    )
   const selectedSubject: PublicSubject | undefined = publicSubject ??
-    (selectedScheduleSubjectName
-      ? {
-          id: `schedule-${getScheduleSubjectSlug(selectedScheduleSubjectName)}`,
-          name: selectedScheduleSubjectName,
-          department: null,
-          instructor: {
-            name: [...new Set(selectedScheduleSubject.map((event) => event.instructor))]
-              .filter(Boolean)
-              .join(', ') || 'Информация не указана',
-            position: '',
-          },
-          assessment: {
-            type: selectedScheduleSubject.some((event) => event.kind === 'Экзамен')
-              ? 'Экзамен'
-              : selectedScheduleSubject.some((event) => event.kind === 'Зачет')
-                ? 'Зачет'
-                : 'Не указана',
-            format: 'Смотрите опубликованное расписание',
-            source: 'Официальное расписание сессии',
-          },
-          courseInfo: [],
-          requirements: [],
-          topicGroups: [],
-          topicItems: [],
-          analysis: [],
-          portalUrl: null,
-          links: [],
-          comments: [],
-        }
-      : undefined)
+    scheduleOnlySubjects.find(({ name }) => name === selectedScheduleSubjectName)
   const isScheduleOnlySubject = Boolean(selectedScheduleSubjectName)
   const hasOfficialSchedule = officialSchedule.length > 0
   const calendarEvents: readonly CalendarEvent[] = hasOfficialSchedule
@@ -1122,9 +1124,24 @@ function App() {
     (subject) => subject.controlWork,
   )
 
+  const subjectsForSelectedGroup = useMemo(() => {
+    const scheduledSubjectNames = new Set(officialSchedule.map((event) => event.subject))
+    const visibleScheduledSubjectNames = new Set(
+      officialSchedule
+        .filter((event) => isScheduleEventVisible(event.group, selectedGroup))
+        .map((event) => event.subject),
+    )
+
+    return [...publicSubjects, ...scheduleOnlySubjects].filter(
+      (subject) =>
+        !scheduledSubjectNames.has(subject.name) ||
+        visibleScheduledSubjectNames.has(subject.name),
+    )
+  }, [selectedGroup])
+
   const filteredSubjects = useMemo(
     () =>
-      publicSubjects.filter((subject) =>
+      subjectsForSelectedGroup.filter((subject) =>
         [
           subject.name,
           subject.department ?? '',
@@ -1140,7 +1157,7 @@ function App() {
           ...subject.analysis,
         ].some((value) => value.toLocaleLowerCase('ru').includes(normalizedQuery)),
       ),
-    [normalizedQuery],
+    [normalizedQuery, subjectsForSelectedGroup],
   )
 
   return (
@@ -1827,7 +1844,9 @@ function App() {
                   <Title id="subjects-title" level={2}>
                     Учебные предметы
                   </Title>
-                  <Text type="secondary">{publicSubjects.length} дисциплин</Text>
+                  <Text type="secondary">
+                    {subjectsForSelectedGroup.length} дисциплин
+                  </Text>
                 </div>
                 <Input
                   allowClear
