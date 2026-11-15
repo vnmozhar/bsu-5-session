@@ -36,6 +36,7 @@ import {
   preliminarySchedule,
   publicSubjects,
   scheduleOnlyCourseInfo,
+  scheduleOnlyMaterials,
   sessionRange,
   type PublicSubject,
 } from './data/publicSubjects'
@@ -146,6 +147,7 @@ const scheduleOnlySubjects: PublicSubject[] = [...new Set(
       source: 'Официальное расписание сессии',
     },
     courseInfo: scheduleOnlyCourseInfo[name] ?? [],
+    materials: scheduleOnlyMaterials[name],
     requirements: [],
     topicGroups: [],
     topicItems: [],
@@ -764,6 +766,34 @@ function ScheduleKindSelector({
         })}
       </Checkbox.Group>
     </div>
+  )
+}
+
+function SubjectMaterials({
+  materials,
+}: {
+  materials: NonNullable<PublicSubject['materials']>
+}) {
+  return (
+    <details className="detail-accordion material-accordion">
+      <summary>Материалы курса ({materials.length})</summary>
+      <div className="accordion-content">
+        {materials.map((material) => (
+          <div className="material-entry" key={material.href}>
+            <Text className="material-category">{material.category}</Text>
+            <a className="material-link" download href={material.href}>
+              <FileTextOutlined />
+              <span>{material.title}</span>
+              <Text className="material-format">{material.format}</Text>
+              <DownloadOutlined />
+            </a>
+            {material.caution && (
+              <Text className="material-caution">{material.caution}</Text>
+            )}
+          </div>
+        ))}
+      </div>
+    </details>
   )
 }
 
@@ -2163,39 +2193,16 @@ function App() {
                       </div>
                     )}
 
+                    {selectedSubject && isScheduleOnlySubject &&
+                      subject.materials && subject.materials.length > 0 && (
+                        <div className="subject-sections">
+                          <SubjectMaterials materials={subject.materials} />
+                        </div>
+                      )}
+
                     {selectedSubject && !isScheduleOnlySubject && <div className="subject-sections">
                       {subject.materials && subject.materials.length > 0 && (
-                        <details className="detail-accordion material-accordion">
-                          <summary>
-                            Материалы курса ({subject.materials.length})
-                          </summary>
-                          <div className="accordion-content">
-                            {subject.materials.map((material) => (
-                              <div className="material-entry" key={material.href}>
-                                <Text className="material-category">
-                                  {material.category}
-                                </Text>
-                                <a
-                                  className="material-link"
-                                  download
-                                  href={material.href}
-                                >
-                                  <FileTextOutlined />
-                                  <span>{material.title}</span>
-                                  <Text className="material-format">
-                                    {material.format}
-                                  </Text>
-                                  <DownloadOutlined />
-                                </a>
-                                {material.caution && (
-                                  <Text className="material-caution">
-                                    {material.caution}
-                                  </Text>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </details>
+                        <SubjectMaterials materials={subject.materials} />
                       )}
 
                       <section className="detail-section">
