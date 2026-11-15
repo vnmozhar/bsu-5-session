@@ -35,6 +35,7 @@ import {
   facultyContacts,
   preliminarySchedule,
   publicSubjects,
+  scheduleOnlyCourseInfo,
   sessionRange,
   type PublicSubject,
 } from './data/publicSubjects'
@@ -144,7 +145,7 @@ const scheduleOnlySubjects: PublicSubject[] = [...new Set(
       format: 'Смотрите опубликованное расписание',
       source: 'Официальное расписание сессии',
     },
-    courseInfo: [],
+    courseInfo: scheduleOnlyCourseInfo[name] ?? [],
     requirements: [],
     topicGroups: [],
     topicItems: [],
@@ -1824,7 +1825,9 @@ function App() {
                 </Title>
                 <Text type="secondary">
                   {isScheduleOnlySubject
-                    ? 'Дополнительная информация о курсе в проекте пока не добавлена.'
+                    ? selectedSubject.courseInfo.length > 0
+                      ? 'Краткие сведения из предоставленных учебных материалов.'
+                      : 'Дополнительная информация о курсе в проекте пока не добавлена.'
                     : 'Информация о курсе и материалы'}
                 </Text>
               </div>
@@ -1915,7 +1918,7 @@ function App() {
                       </div>
                     </div>
 
-                    {!isScheduleOnlySubject && <div className="subject-overview-sections">
+                    {(!isScheduleOnlySubject || subject.courseInfo.length > 0) && <div className="subject-overview-sections">
                       <section className="detail-section course-info">
                         <div className="detail-heading">
                           <BookOutlined />
@@ -1926,6 +1929,11 @@ function App() {
                             <Paragraph className="course-note-text">
                               {item.text}
                             </Paragraph>
+                            {isScheduleOnlySubject && (
+                              <Text className="course-note-source">
+                                Источник: {item.source}
+                              </Text>
+                            )}
                             {item.caution && (
                               <Text className="course-note-caution">
                                 {item.caution}
@@ -1941,6 +1949,7 @@ function App() {
                         )}
                       </section>
 
+                      {!isScheduleOnlySubject && <>
                       <section className="detail-section">
                         <div className="detail-heading">
                           <LinkOutlined />
@@ -2047,6 +2056,7 @@ function App() {
                           </Text>
                         )}
                       </section>
+                      </>}
                     </div>}
 
                     {selectedSubject && (
