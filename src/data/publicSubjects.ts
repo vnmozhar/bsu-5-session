@@ -699,11 +699,6 @@ export const publicSubjects: readonly PublicSubject[] = [
         source: 'Учебная заметка, не подтверждено преподавателем',
         caution: 'Формат не подтвержден',
       },
-      {
-        text: 'В архиве есть научные и учебные материалы о правосудии по делам несовершеннолетних.',
-        source: 'Предоставленные учебные материалы по уголовному процессу',
-        caution: 'Соответствие экзаменационным требованиям не установлено',
-      },
     ],
     requirements: [
       {
@@ -850,7 +845,12 @@ export const publicSubjects: readonly PublicSubject[] = [
           'Практический раздел УМК, с. 53, п. 2.2.2, прямо указывает студентов заочной формы получения второго высшего образования и относит темы 5–8 к семинарскому занятию 1 (2 часа); подтвержден именно этот фрагмент. Библиографическое описание указывает страницы 108–110, но PDF содержит 107 страниц.',
       },
     ],
-    links: [],
+    links: [
+      {
+        title: 'Материалы курса в Google Drive',
+        url: 'https://drive.google.com/drive/folders/1r7Ke7Y_h0zMs2-lfNVleBpsMFNv82csQ',
+      },
+    ],
     comments: [],
   },
   {
@@ -882,7 +882,12 @@ export const publicSubjects: readonly PublicSubject[] = [
       'В источнике стоит неопределенная отметка о формате. Ее нельзя трактовать как подтверждение устного, письменного или тестового зачета.',
     ],
     portalUrl: null,
-    links: [],
+    links: [
+      {
+        title: 'Материалы курса в Google Drive',
+        url: 'https://drive.google.com/drive/folders/1SWIJN4qmL1nP9T3tCxiOQmYlnxSOOQYn',
+      },
+    ],
     comments: [],
   },
   {
