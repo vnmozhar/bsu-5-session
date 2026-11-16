@@ -43,6 +43,7 @@ import {
 import {
   officialSchedule,
   officialScheduleSource,
+  type OfficialScheduleEntry,
 } from './data/officialSchedule'
 import './App.css'
 
@@ -90,12 +91,15 @@ interface TodayAgendaItem {
 }
 
 function getScheduleChangeNotice(
-  scheduleChange: { previousTime: string } | undefined,
+  scheduleChange: OfficialScheduleEntry['scheduleChange'],
   time: string,
+  location?: string,
 ) {
-  return scheduleChange
-    ? `Перенос времени: было ${scheduleChange.previousTime}, теперь ${time}`
-    : undefined
+  if (!scheduleChange) return undefined
+  if ('previousTime' in scheduleChange) {
+    return `Перенос времени: было ${scheduleChange.previousTime}, теперь ${time}`
+  }
+  return `Изменение аудитории: была ${scheduleChange.previousLocation}, теперь ${location ?? 'не указана'}`
 }
 
 function getScheduleSubjectSlug(subject: string) {
@@ -371,7 +375,17 @@ function WeekCalendar({
                           gridRow: `${startSlot + 1} / span ${endSlot - startSlot}`,
                           '--weekly-event-lanes': laneCount,
                         } as CSSProperties & { '--weekly-event-lanes': number }}
-                        title={`${event.time} · ${event.kind} · ${event.subject} · ${event.group}${event.scheduleChange ? ` · Перенос времени: было ${event.scheduleChange.previousTime}, теперь ${event.time}` : ''}`}
+                        title={[
+                          event.time,
+                          event.kind,
+                          event.subject,
+                          event.group,
+                          getScheduleChangeNotice(
+                            event.scheduleChange,
+                            event.time,
+                            event.location,
+                          ),
+                        ].filter(Boolean).join(' · ')}
                       >
                         <Text className="weekly-event-time">{event.time}</Text>
                         <Text className="weekly-event-subject">{event.subject}</Text>
@@ -379,7 +393,11 @@ function WeekCalendar({
                         <Text className="weekly-event-group">{event.group}</Text>
                         {event.scheduleChange && (
                           <Text className="weekly-event-change">
-                            Перенос с {event.scheduleChange.previousTime} на {event.time}
+                            {getScheduleChangeNotice(
+                              event.scheduleChange,
+                              event.time,
+                              event.location,
+                            )}
                           </Text>
                         )}
                       </article>
@@ -475,14 +493,16 @@ async function downloadWeekPdf(
                     { text: 'Аудитория', style: 'tableHeader' },
                   ],
                   ...dayEvents.map((event) => [
-                    event.scheduleChange
+                    event.scheduleChange && 'previousTime' in event.scheduleChange
                       ? `${event.time} (перенос, было ${event.scheduleChange.previousTime})`
                       : event.time,
                     event.kind,
                     event.subject,
                     event.group,
                     event.instructor,
-                    event.location ?? '',
+                    event.scheduleChange && 'previousLocation' in event.scheduleChange
+                      ? `${event.location ?? ''} (изменение, была ${event.scheduleChange.previousLocation})`
+                      : event.location ?? '',
                   ]),
                 ],
               },
@@ -570,7 +590,7 @@ function CalendarGrid({
       {showEventKinds && events.some((event) => event.changeNotice) && (
         <Text className="calendar-change-legend">
           <span aria-hidden="true" className="calendar-change-marker">!</span>
-          Перенос времени
+          Изменения расписания
         </Text>
       )}
       {months.map((month) => (
@@ -850,7 +870,11 @@ function App() {
           .filter(Boolean)
           .join(' · '),
         group: event.group,
-        changeNotice: getScheduleChangeNotice(event.scheduleChange, event.time),
+        changeNotice: getScheduleChangeNotice(
+          event.scheduleChange,
+          event.time,
+          event.location,
+        ),
       }))
     : preliminarySchedule
   const calendarEventKinds = [...new Set(calendarEvents.map((event) => event.kind))]
@@ -962,7 +986,11 @@ function App() {
         instructor: event.instructor,
         detail: '',
         status: getTodayEventStatus(event.time, currentMinutes),
-        changeNotice: getScheduleChangeNotice(event.scheduleChange, event.time),
+        changeNotice: getScheduleChangeNotice(
+          event.scheduleChange,
+          event.time,
+          event.location,
+        ),
       }))
     : todayPreliminaryEvents.map((event) => ({
         key: `${event.date}-${event.kind}-${event.detail}`,
@@ -1007,7 +1035,11 @@ function App() {
     date: event.date,
     kind: event.kind,
     detail: `${event.time} · ${event.subject}`,
-    changeNotice: getScheduleChangeNotice(event.scheduleChange, event.time),
+    changeNotice: getScheduleChangeNotice(
+      event.scheduleChange,
+      event.time,
+      event.location,
+    ),
   }))
   const subjectScheduleKinds = [...new Set(subjectSchedule.map((event) => event.kind))]
   const [selectedSubjectDate, setSelectedSubjectDate] = useState(
@@ -1116,7 +1148,11 @@ function App() {
                         {event.group.startsWith('ХОЗ') && <Tag>ХОЗ</Tag>}
                         {event.scheduleChange && (
                           <Tag color="volcano">
-                            Перенос времени: было {event.scheduleChange.previousTime}
+                            {getScheduleChangeNotice(
+                              event.scheduleChange,
+                              event.time,
+                              event.location,
+                            )}
                           </Tag>
                         )}
                         {event.group.includes('подгруппа') && (
@@ -1278,7 +1314,7 @@ function App() {
                         <div className="today-agenda-title">
                           <Text strong>{event.subject}</Text>
                           {event.changeNotice && (
-                            <Tag color="volcano">Перенос времени</Tag>
+                            <Tag color="volcano">Изменение расписания</Tag>
                           )}
                           {event.status && (
                             <Tag color={event.status === 'Сейчас идет' ? 'green' : 'blue'}>
@@ -2154,7 +2190,11 @@ function App() {
                                     <Text strong>{event.time}</Text>
                                     {event.scheduleChange && (
                                       <Tag color="volcano">
-                                        Перенос времени: было {event.scheduleChange.previousTime}
+                                        {getScheduleChangeNotice(
+                                          event.scheduleChange,
+                                          event.time,
+                                          event.location,
+                                        )}
                                       </Tag>
                                     )}
                                     {event.group && <Text>{event.group}</Text>}
