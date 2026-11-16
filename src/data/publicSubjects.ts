@@ -754,6 +754,10 @@ export const publicSubjects: readonly PublicSubject[] = [
         url: 'https://edulaw.bsu.by/course/view.php?id=388',
         note: 'Отдельный курс по контрольной работе по уголовному процессу.',
       },
+      {
+        title: 'Материалы курса в Google Drive',
+        url: 'https://drive.google.com/drive/folders/1eVN9TGZskkjHgI12CcsMfWnB6YAl2kll',
+      },
     ],
     comments: [],
   },
