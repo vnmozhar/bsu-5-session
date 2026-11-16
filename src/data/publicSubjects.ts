@@ -392,7 +392,12 @@ export const publicSubjects: readonly PublicSubject[] = [
           'Программа включает карту для заочной формы (2-ое высшее), но ее актуальность для 2026/2027 учебного года не подтверждена.',
       },
     ],
-    links: [],
+    links: [
+      {
+        title: 'Материалы курса в Google Drive',
+        url: 'https://drive.google.com/drive/folders/1JGMJrXgP_Wc0b8kuNNf28KpexMG9xUhO',
+      },
+    ],
     comments: [],
   },
   {
@@ -667,7 +672,12 @@ export const publicSubjects: readonly PublicSubject[] = [
         caution: 'Актуальность редакции не проверена.',
       },
     ],
-    links: [],
+    links: [
+      {
+        title: 'Материалы курса в Google Drive',
+        url: 'https://drive.google.com/drive/folders/1yZd0WB2BTjvpT00kfmh_V999j-W1hyDr',
+      },
+    ],
     comments: [],
   },
   {

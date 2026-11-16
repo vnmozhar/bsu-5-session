@@ -1241,7 +1241,6 @@ function App() {
           ...subject.topicGroups.flatMap((item) => [item.title, item.detail]),
           ...subject.topicItems,
           ...(subject.materials ?? []).map((item) => item.title),
-          ...subject.analysis,
         ].some((value) => value.toLocaleLowerCase('ru').includes(normalizedQuery)),
       ),
     [normalizedQuery, subjectsForSelectedGroup],
@@ -2315,19 +2314,6 @@ function App() {
                                 ))}
                               </ol>
                             )}
-                          </div>
-                        </details>
-                      )}
-
-                      {subject.analysis.length > 0 && (
-                        <details className="detail-accordion">
-                          <summary>Аналитика, предположения и пробелы</summary>
-                          <div className="accordion-content">
-                            {subject.analysis.map((item) => (
-                              <Paragraph className="analysis-note" key={item}>
-                                {item}
-                              </Paragraph>
-                            ))}
                           </div>
                         </details>
                       )}

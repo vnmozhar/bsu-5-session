@@ -2178,15 +2178,6 @@ button.calendar-day {
   line-height: 1.45;
 }
 
-.analysis-note.ant-typography {
-  margin: 0;
-  padding-left: 10px;
-  border-left: 2px solid var(--color-accent-teal);
-  color: var(--color-text-secondary);
-  font-size: 11px;
-  line-height: 1.55;
-}
-
 .detail-section {
   display: grid;
   gap: 8px;
