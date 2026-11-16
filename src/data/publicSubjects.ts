@@ -1196,3 +1196,14 @@ export const publicSubjects: readonly PublicSubject[] = [
     comments: [],
   },
 ]
+
+export const scheduleOnlySubjectLinks: Readonly<
+  Record<string, PublicSubject['links'][number][]>
+> = {
+  'Адвокат в уголовном процессе': [
+    {
+      title: 'Материалы курса в Google Drive',
+      url: 'https://drive.google.com/drive/folders/19I4-pF5F9otOHCv1L1W1ynXKzEXLrR7i',
+    },
+  ],
+}

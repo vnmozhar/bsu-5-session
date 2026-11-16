@@ -35,6 +35,7 @@ import {
   facultyContacts,
   preliminarySchedule,
   publicSubjects,
+  scheduleOnlySubjectLinks,
   scheduleOnlyCourseInfo,
   scheduleOnlyMaterials,
   sessionRange,
@@ -157,7 +158,7 @@ const scheduleOnlySubjects: PublicSubject[] = [...new Set(
     topicItems: [],
     analysis: [],
     portalUrl: null,
-    links: [],
+    links: scheduleOnlySubjectLinks[name] ?? [],
     comments: [],
   }
 })
@@ -1984,7 +1985,8 @@ function App() {
                       </div>
                     </div>
 
-                    {(!isScheduleOnlySubject || subject.courseInfo.length > 0) && <div className="subject-overview-sections">
+                    {(!isScheduleOnlySubject || subject.courseInfo.length > 0 || subject.links.length > 0) && <div className="subject-overview-sections">
+                      {(!isScheduleOnlySubject || subject.courseInfo.length > 0) && (
                       <section className="detail-section course-info">
                         <div className="detail-heading">
                           <BookOutlined />
@@ -2014,8 +2016,8 @@ function App() {
                           </Text>
                         )}
                       </section>
+                      )}
 
-                      {!isScheduleOnlySubject && <>
                       <section className="detail-section">
                         <div className="detail-heading">
                           <LinkOutlined />
@@ -2122,7 +2124,6 @@ function App() {
                           </Text>
                         )}
                       </section>
-                      </>}
                     </div>}
 
                     {selectedSubject && (
