@@ -1211,7 +1211,12 @@ export const publicSubjects: readonly PublicSubject[] = [
       'Тему доклада можно связать с одним из 39 вопросов или с несколькими взаимосвязанными вопросами.',
     ],
     portalUrl: null,
-    links: [],
+    links: [
+      {
+        title: 'Материалы курса в Google Drive',
+        url: 'https://drive.google.com/drive/folders/1UbH2N8D9jBcXU5xExUgNS25S6fMu_6Wg',
+      },
+    ],
     comments: [],
   },
 ]
