@@ -2209,6 +2209,11 @@ button.calendar-day {
   text-decoration: none;
 }
 
+.google-drive-icon {
+  margin-inline-end: 6px;
+  color: #188038;
+}
+
 .detail-link-item {
   display: grid;
   gap: 3px;

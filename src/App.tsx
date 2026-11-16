@@ -11,6 +11,7 @@ import {
   EyeInvisibleOutlined,
   EyeOutlined,
   FileTextOutlined,
+  GoogleOutlined,
   LinkOutlined,
   MessageOutlined,
   SearchOutlined,
@@ -108,6 +109,19 @@ function getScheduleSubjectSlug(subject: string) {
     .replace(/ё/g, 'е')
     .replace(/[^а-яa-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
+}
+
+function isGoogleDriveUrl(value: string) {
+  try {
+    const hostname = new URL(value).hostname.toLocaleLowerCase('en')
+    return [
+      'drive.google.com',
+      'docs.google.com',
+      'drive.googleusercontent.com',
+    ].includes(hostname)
+  } catch {
+    return false
+  }
 }
 
 function isScheduleEventVisible(group: string | undefined, selectedGroup: StudyGroup) {
@@ -2006,7 +2020,7 @@ function App() {
                       </div>
                     </div>
 
-                    {(!isScheduleOnlySubject || subject.courseInfo.length > 0 || subject.links.length > 0) && <div className="subject-overview-sections">
+                    {(selectedSubject || !isScheduleOnlySubject || subject.courseInfo.length > 0 || subject.links.length > 0) && <div className="subject-overview-sections">
                       {(!isScheduleOnlySubject || subject.courseInfo.length > 0) && (
                       <section className="detail-section course-info">
                         <div className="detail-heading">
@@ -2053,6 +2067,12 @@ function App() {
                                 rel="noreferrer"
                                 target="_blank"
                               >
+                                {isGoogleDriveUrl(subject.portalUrl) && (
+                                  <GoogleOutlined
+                                    aria-hidden="true"
+                                    className="google-drive-icon"
+                                  />
+                                )}
                                 Учебный портал БГУ
                               </a>
                             </div>
@@ -2130,6 +2150,12 @@ function App() {
                               rel="noreferrer"
                               target="_blank"
                             >
+                              {isGoogleDriveUrl(link.url) && (
+                                <GoogleOutlined
+                                  aria-hidden="true"
+                                  className="google-drive-icon"
+                                />
+                              )}
                               {link.title}
                             </a>
                             {link.note && (
