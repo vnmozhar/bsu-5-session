@@ -1206,4 +1206,10 @@ export const scheduleOnlySubjectLinks: Readonly<
       url: 'https://drive.google.com/drive/folders/19I4-pF5F9otOHCv1L1W1ynXKzEXLrR7i',
     },
   ],
+  'Квалификация преступлений': [
+    {
+      title: 'Материалы курса в Google Drive',
+      url: 'https://drive.google.com/drive/folders/11n4FykrUSmkAG45SopsPMsanEdNRuLUG',
+    },
+  ],
 }
