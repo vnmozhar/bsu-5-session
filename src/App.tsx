@@ -43,7 +43,6 @@ import {
 } from './data/publicSubjects'
 import {
   officialSchedule,
-  officialScheduleSource,
   type OfficialScheduleEntry,
 } from './data/officialSchedule'
 import './App.css'
@@ -558,11 +557,13 @@ function getSessionMonthKeys() {
 
 function CalendarGrid({
   events,
+  today,
   selectedDate,
   onSelectDate,
   showEventKinds = false,
 }: {
   events: readonly CalendarEvent[]
+  today: string
   selectedDate: string
   onSelectDate: (date: string) => void
   showEventKinds?: boolean
@@ -624,12 +625,13 @@ function CalendarGrid({
                 `${formatScheduleDate(date)}: ${dayEvents.map((event) => event.kind).join(', ')}`,
                 ...dayEvents.flatMap((event) => event.changeNotice ? [event.changeNotice] : []),
               ].join('. ')
+              const isPastDate = date < today
 
               return dayEvents.length > 0 ? (
                 <button
                   aria-label={ariaLabel}
                   aria-pressed={selectedDate === date}
-                  className={`calendar-day calendar-event-day${selectedDate === date ? ' is-selected' : ''}`}
+                  className={`calendar-day calendar-event-day${isPastDate ? ' is-past' : ''}${selectedDate === date ? ' is-selected' : ''}`}
                   key={date}
                   onClick={() => onSelectDate(date)}
                   title={dayEvents
@@ -676,11 +678,6 @@ function ScheduleGroupSelector({
 }) {
   const groups = [
     {
-      value: 'ОБЩ' as const,
-      title: 'Общий просмотр',
-      detail: 'Совместное расписание и информация',
-    },
-    {
       value: 'СПС' as const,
       title: 'Судебно-прокурорско-следственная деятельность',
       detail: 'Расписание СПС и общие события',
@@ -689,6 +686,11 @@ function ScheduleGroupSelector({
       value: 'ХОЗ' as const,
       title: 'Хозяйственное право',
       detail: 'Расписание ХОЗ и общие события',
+    },
+    {
+      value: 'ОБЩ' as const,
+      title: 'Общий просмотр',
+      detail: 'Совместное расписание и информация',
     },
   ]
   const selectedGroupTitle = groups.find((group) => group.value === selectedGroup)?.title
@@ -839,7 +841,9 @@ function App() {
   })
   const [selectedGroup, setSelectedGroup] = useState<StudyGroup>(() => {
     const savedGroup = window.localStorage.getItem('bsu-session-dashboard-group-v1')
-    return savedGroup === 'СПС' || savedGroup === 'ХОЗ' ? savedGroup : 'ОБЩ'
+    return savedGroup === 'ОБЩ' || savedGroup === 'СПС' || savedGroup === 'ХОЗ'
+      ? savedGroup
+      : 'СПС'
   })
   const normalizedQuery = query.trim().toLocaleLowerCase('ru')
   const currentPath = window.location.pathname.replace(/\/+$/, '') || '/'
@@ -890,6 +894,20 @@ function App() {
   )
   const upcomingEvents = sortedCalendarEvents
     .filter((event) => event.date >= today)
+    .slice(0, 5)
+  const upcomingAssessments = sortedCalendarEvents
+    .filter((event) =>
+      (event.kind === 'Экзамен' || event.kind === 'Зачет') &&
+      (event.date > today ||
+        (event.date === today &&
+          (getTimeValues(event.detail)[0] ?? Number.MAX_SAFE_INTEGER) >=
+            currentTime.getHours() * 60 + currentTime.getMinutes())),
+    )
+    .sort((first, second) =>
+      first.date.localeCompare(second.date) ||
+      (getTimeValues(first.detail)[0] ?? Number.MAX_SAFE_INTEGER) -
+        (getTimeValues(second.detail)[0] ?? Number.MAX_SAFE_INTEGER),
+    )
     .slice(0, 5)
   const [selectedDate, setSelectedDate] = useState(
     upcomingEvents[0]?.date ?? sortedCalendarEvents[0]?.date ?? '',
@@ -1029,6 +1047,7 @@ function App() {
             : todayAgendaItems.length === 0
               ? 'Сейчас по опубликованному расписанию учебных мероприятий нет.'
               : 'В расписании недостаточно данных о времени, чтобы определить, идет ли занятие сейчас.'
+  const todayStatusSummary = currentAgendaItem ? null : currentMomentSummary
   const nextKnownEvent = [...visibleCalendarEvents]
     .filter((event) => event.date > today)
     .sort((first, second) => first.date.localeCompare(second.date))[0]
@@ -1303,11 +1322,18 @@ function App() {
               </Tag>
             </div>
             <div aria-live="polite" className="today-brief-content">
+              {todayStatusSummary && (
+                <Text className="today-current-status">{todayStatusSummary}</Text>
+              )}
               {todayAgendaItems.length > 0 ? (
                 <>
                   <Text strong>План на сегодня</Text>
                   {todayAgendaItems.map((event) => (
-                    <div className="today-agenda-item" key={event.key}>
+                    <div
+                      aria-current={event.status === 'Сейчас идет' ? 'true' : undefined}
+                      className={`today-agenda-item${event.status === 'Завершено' ? ' is-past' : ''}${event.status === 'Сейчас идет' ? ' is-ongoing' : ''}`}
+                      key={event.key}
+                    >
                       <Text className="today-agenda-time">
                         {event.time || event.kind}
                       </Text>
@@ -1318,7 +1344,13 @@ function App() {
                             <Tag color="volcano">Изменение расписания</Tag>
                           )}
                           {event.status && (
-                            <Tag color={event.status === 'Сейчас идет' ? 'green' : 'blue'}>
+                            <Tag color={
+                              event.status === 'Сейчас идет'
+                                ? 'green'
+                                : event.status === 'Завершено'
+                                  ? 'default'
+                                  : 'blue'
+                            }>
                               {event.status}
                             </Tag>
                           )}
@@ -1345,7 +1377,6 @@ function App() {
                     : 'На сегодня учебные мероприятия в предварительных сведениях не указаны.'}
                 </Text>
               )}
-              <Text className="today-current-status">{currentMomentSummary}</Text>
               {nextKnownEvent ? (
                 <div className="today-next-event">
                   <Text className="today-next-label">Ближайшее далее</Text>
@@ -1391,21 +1422,6 @@ function App() {
                 </a>
               </div>
             </div>
-            <Alert
-              className="schedule-alert"
-              title={
-                hasOfficialSchedule
-                  ? 'Официальное расписание опубликовано'
-                  : 'Расписание пока согласуется'
-              }
-              description={
-                hasOfficialSchedule
-                  ? `${officialScheduleSource} Выберите группу, чтобы отфильтровать расписание.`
-                  : 'Пока известны только предварительные даты. Предметы, группы и время еще не подтверждены.'
-              }
-              showIcon
-              type={hasOfficialSchedule ? 'success' : 'warning'}
-            />
             <Text className="session-range">
               Физически 5-я сессия (4 курс, 7 семестр): с {formatScheduleDate(sessionRange.start)} по{' '}
               {formatScheduleDate(sessionRange.end)}
@@ -1421,6 +1437,7 @@ function App() {
                 onSelectDate={setSelectedDate}
                 selectedDate={selectedDate}
                 showEventKinds
+                today={today}
               />
               <aside aria-live="polite" className="calendar-selection">
                 <Text className="section-kicker">ВЫБРАННАЯ ДАТА</Text>
@@ -1428,8 +1445,13 @@ function App() {
                   <>
                     <Title level={3}>{formatScheduleDate(selectedDate)}</Title>
                     {selectedEvents.map((event) => (
-                      <div className="calendar-event-detail" key={`${event.date}-${event.kind}-${event.detail}`}>
-                        <Text className="schedule-date-kind">{event.kind}</Text>
+                      <div
+                        className={`calendar-event-detail calendar-event-detail--${getScheduleEventKindStyle(event.kind).className}`}
+                        key={`${event.date}-${event.kind}-${event.detail}`}
+                      >
+                        <Text className={`schedule-date-kind schedule-date-kind--${getScheduleEventKindStyle(event.kind).className}`}>
+                          {event.kind}
+                        </Text>
                         <Text className="schedule-date-detail">{event.detail}</Text>
                         {event.changeNotice && (
                           <Tag color="volcano">{event.changeNotice}</Tag>
@@ -1445,16 +1467,16 @@ function App() {
             <section aria-labelledby="upcoming-events-title" className="upcoming-events">
               <div className="upcoming-events-heading">
                 <div>
-                  <Text className="section-kicker">БЛИЖАЙШИЕ ДАТЫ</Text>
+                  <Text className="section-kicker">БЛИЖАЙШИЕ АТТЕСТАЦИИ</Text>
                   <Title id="upcoming-events-title" level={3}>
-                    До пяти следующих событий
+                    Пять ближайших аттестаций
                   </Title>
                 </div>
                 <Text type="secondary">Выберите событие, чтобы увидеть его в календаре</Text>
               </div>
-              {upcomingEvents.length > 0 ? (
+              {upcomingAssessments.length > 0 ? (
                 <div className="upcoming-events-list">
-                  {upcomingEvents.map((event) => (
+                  {upcomingAssessments.map((event) => (
                     <button
                       aria-pressed={selectedDate === event.date}
                       className={`upcoming-event${selectedDate === event.date ? ' is-selected' : ''}`}
@@ -1474,7 +1496,7 @@ function App() {
                   ))}
                 </div>
               ) : (
-                <Text className="empty-detail">Ближайших событий нет</Text>
+                <Text className="empty-detail">Ближайших аттестаций нет</Text>
               )}
             </section>
           </section>
@@ -2170,6 +2192,7 @@ function App() {
                                 onSelectDate={setSelectedSubjectDate}
                                 selectedDate={effectiveSubjectDate}
                                 showEventKinds
+                                today={today}
                               />
                               <div className="subject-schedule-list">
                                 {selectedSubjectEvents.map((event) => (
