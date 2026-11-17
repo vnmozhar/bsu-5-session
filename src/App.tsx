@@ -1062,9 +1062,6 @@ function App() {
               ? 'Сейчас по опубликованному расписанию учебных мероприятий нет.'
               : 'В расписании недостаточно данных о времени, чтобы определить, идет ли занятие сейчас.'
   const todayStatusSummary = currentAgendaItem ? null : currentMomentSummary
-  const nextKnownEvent = [...visibleCalendarEvents]
-    .filter((event) => event.date > today)
-    .sort((first, second) => first.date.localeCompare(second.date))[0]
   const subjectCalendarEvents: CalendarEvent[] = subjectSchedule.map((event) => ({
     date: event.date,
     kind: event.kind,
@@ -1353,6 +1350,12 @@ function App() {
                       <div className="today-agenda-copy">
                         <div className="today-agenda-title">
                           <Text strong>{event.subject}</Text>
+                          <Tag
+                            aria-label={`Тип занятия: ${event.kind}`}
+                            color={getScheduleEventKindStyle(event.kind).tagColor}
+                          >
+                            {event.kind}
+                          </Tag>
                           {event.changeNotice && (
                             <Tag color="volcano">Изменение расписания</Tag>
                           )}
@@ -1390,17 +1393,6 @@ function App() {
                     : 'На сегодня учебные мероприятия в предварительных сведениях не указаны.'}
                 </Text>
               )}
-              {nextKnownEvent ? (
-                <div className="today-next-event">
-                  <Text className="today-next-label">Ближайшее далее</Text>
-                  <Text strong>
-                    {formatScheduleDate(nextKnownEvent.date)} · {nextKnownEvent.kind}
-                  </Text>
-                  <Text type="secondary">{nextKnownEvent.detail}</Text>
-                </div>
-              ) : !todayAgendaItems.length ? (
-                <Text type="secondary">Ближайшие даты пока не указаны.</Text>
-              ) : null}
             </div>
           </section>
         )}
