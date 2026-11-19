@@ -1149,6 +1149,7 @@ function App() {
                 ? ['ХОЗ']
                 : [],
           ))]
+          const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes()
 
           return (
             <li key={name}>
@@ -1166,31 +1167,40 @@ function App() {
                 </span>
                 {category === 'assessment' ? (
                   <span className="session-assessment-schedule">
-                    {events.map((event) => (
-                      <span
-                        className="session-assessment-occurrence"
-                        key={`${event.date}-${event.time}-${event.group}`}
-                      >
-                        <Tag color={event.kind === 'Экзамен' ? 'blue' : 'green'}>
-                          {formatScheduleDate(event.date)} · {event.time}
-                          {event.location ? ` · ауд. ${event.location}` : ''}
-                        </Tag>
-                        {event.group.startsWith('СПС') && <Tag>СПСД</Tag>}
-                        {event.group.startsWith('ХОЗ') && <Tag>ХОЗ</Tag>}
-                        {event.scheduleChange && (
-                          <Tag color="volcano">
-                            {getScheduleChangeNotice(
-                              event.scheduleChange,
-                              event.time,
-                              event.location,
-                            )}
+                    {events.map((event) => {
+                      const startMinutes = getTimeValues(event.time)[0]
+                      const isPassed = event.date < today ||
+                        (event.date === today &&
+                          startMinutes !== undefined &&
+                          startMinutes <= currentMinutes)
+
+                      return (
+                        <span
+                          className={`session-assessment-occurrence${isPassed ? ' is-past' : ''}`}
+                          key={`${event.date}-${event.time}-${event.group}`}
+                        >
+                          <Tag color={event.kind === 'Экзамен' ? 'blue' : 'green'}>
+                            {formatScheduleDate(event.date)} · {event.time}
+                            {event.location ? ` · ауд. ${event.location}` : ''}
                           </Tag>
-                        )}
-                        {event.group.includes('подгруппа') && (
-                          <Text>{event.group.split(' · ').slice(1).join(' · ')}</Text>
-                        )}
-                      </span>
-                    ))}
+                          {isPassed && <Tag>Прошло</Tag>}
+                          {event.group.startsWith('СПС') && <Tag>СПСД</Tag>}
+                          {event.group.startsWith('ХОЗ') && <Tag>ХОЗ</Tag>}
+                          {event.scheduleChange && (
+                            <Tag color="volcano">
+                              {getScheduleChangeNotice(
+                                event.scheduleChange,
+                                event.time,
+                                event.location,
+                              )}
+                            </Tag>
+                          )}
+                          {event.group.includes('подгруппа') && (
+                            <Text>{event.group.split(' · ').slice(1).join(' · ')}</Text>
+                          )}
+                        </span>
+                      )
+                    })}
                   </span>
                 ) : (
                   <Text className="session-assessment-missing">

@@ -993,6 +993,14 @@ button.calendar-day {
   line-height: 19px;
 }
 
+.session-assessment-occurrence.is-past {
+  opacity: 0.62;
+}
+
+.session-assessment-occurrence.is-past .ant-tag:first-child {
+  text-decoration: line-through;
+}
+
 .session-assessment-missing {
   color: var(--color-text-secondary);
   font-size: 10px;
