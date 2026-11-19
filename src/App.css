@@ -195,15 +195,15 @@
 
 .today-agenda-item.is-past {
   padding: 9px 10px;
-  border: 0;
+  border: 1px solid #cbd2da;
   border-radius: 8px;
-  background: #f0f1f2;
-  color: #78818a;
+  background: #edf0f3;
+  color: #59636e;
 }
 
 .today-agenda-item.is-past .today-agenda-time,
 .today-agenda-item.is-past .today-agenda-title {
-  color: #78818a;
+  color: #59636e;
 }
 
 .today-agenda-item.is-ongoing {
@@ -693,13 +693,13 @@ button.calendar-day {
 }
 
 .calendar-event-day.is-past {
-  border-color: #e0e3e6 !important;
-  background: #f0f1f2 !important;
-  color: #78818a;
+  border: 2px solid #aab1ba !important;
+  background: #e9edf2 !important;
+  color: #59636e;
 }
 
 .calendar-event-day.is-past .calendar-event-markers {
-  opacity: 0.55;
+  opacity: 0.72;
 }
 
 .calendar-event-day.is-past:hover,
@@ -994,11 +994,22 @@ button.calendar-day {
 }
 
 .session-assessment-occurrence.is-past {
-  opacity: 0.62;
+  padding: 5px 6px;
+  border: 1px solid #cbd2da;
+  border-radius: 8px;
+  background: #edf0f3;
 }
 
 .session-assessment-occurrence.is-past .ant-tag:first-child {
+  color: #59636e;
   text-decoration: line-through;
+}
+
+.session-assessment-occurrence.is-current {
+  padding: 5px 6px;
+  border: 2px solid #52c41a;
+  border-radius: 8px;
+  background: #f6ffed;
 }
 
 .session-assessment-missing {
@@ -1837,6 +1848,18 @@ button.calendar-day {
   font-size: 11px;
 }
 
+.subject-assessment-status.is-passed {
+  border: 1px solid #91b899;
+  background: #edf7ef;
+  color: #276738;
+  font-weight: 700;
+}
+
+.subject-assessment-status.is-current {
+  border: 1px solid #52c41a;
+  font-weight: 700;
+}
+
 .assessment-source {
   color: var(--color-text-secondary);
   font-size: 10px;
@@ -1959,6 +1982,23 @@ button.calendar-day {
   background: #fff;
   color: var(--color-text-secondary);
   font-size: 12px;
+}
+
+.subject-schedule-event.is-past {
+  border: 2px solid #aab1ba;
+  background: #edf0f3;
+  color: #59636e;
+}
+
+.subject-schedule-event.is-past .schedule-date-value {
+  text-decoration: line-through;
+}
+
+.subject-schedule-event.is-current {
+  border: 2px solid #52c41a;
+  background: #f6ffed;
+  box-shadow: 0 0 0 3px #edf9e6;
+  color: #235b22;
 }
 
 .subject-event-meta {

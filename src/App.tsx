@@ -190,7 +190,24 @@ function getTodayEventStatus(time: string, currentMinutes: number) {
     if (currentMinutes < end) return 'Сейчас идет'
     return 'Завершено'
   }
-  return currentMinutes < start ? 'Далее' : null
+  if (currentMinutes < start) return 'Далее'
+  if (currentMinutes === start) return 'Сейчас идет'
+  return 'Завершено'
+}
+
+function getScheduleEventStatus(
+  event: { date: string; time: string; kind: string },
+  today: string,
+  currentMinutes: number,
+) {
+  if (event.date < today) return 'Прошло'
+  if (event.date > today) return 'Далее'
+
+  const [start] = getTimeValues(event.time)
+  if (start === undefined) return null
+  if (currentMinutes < start) return 'Далее'
+  if (currentMinutes === start) return 'Сейчас идет'
+  return 'Прошло'
 }
 
 function parseScheduleDate(date: string) {
@@ -1168,15 +1185,17 @@ function App() {
                 {category === 'assessment' ? (
                   <span className="session-assessment-schedule">
                     {events.map((event) => {
-                      const startMinutes = getTimeValues(event.time)[0]
-                      const isPassed = event.date < today ||
-                        (event.date === today &&
-                          startMinutes !== undefined &&
-                          startMinutes <= currentMinutes)
+                      const status = getScheduleEventStatus(
+                        event,
+                        today,
+                        currentMinutes,
+                      )
+                      const isPassed = status === 'Прошло'
+                      const isCurrent = status === 'Сейчас идет'
 
                       return (
                         <span
-                          className={`session-assessment-occurrence${isPassed ? ' is-past' : ''}`}
+                          className={`session-assessment-occurrence${isPassed ? ' is-past' : ''}${isCurrent ? ' is-current' : ''}`}
                           key={`${event.date}-${event.time}-${event.group}`}
                         >
                           <Tag color={event.kind === 'Экзамен' ? 'blue' : 'green'}>
@@ -1184,6 +1203,7 @@ function App() {
                             {event.location ? ` · ауд. ${event.location}` : ''}
                           </Tag>
                           {isPassed && <Tag>Прошло</Tag>}
+                          {isCurrent && <Tag color="green">Сейчас идет</Tag>}
                           {event.group.startsWith('СПС') && <Tag>СПСД</Tag>}
                           {event.group.startsWith('ХОЗ') && <Tag>ХОЗ</Tag>}
                           {event.scheduleChange && (
@@ -2002,6 +2022,25 @@ function App() {
                         {subject.assessment.type}
                       </Tag>
                       <Text>{subject.assessment.format}</Text>
+                      {(() => {
+                        const assessmentEvents = officialSchedule.filter((event) =>
+                          (event.subjectId === subject.id ||
+                            (!event.subjectId && event.subject === subject.name)) &&
+                          (event.kind === 'Экзамен' || event.kind === 'Зачет') &&
+                          isScheduleEventVisible(event.group, selectedGroup),
+                        )
+                        const statuses = assessmentEvents.map((event) =>
+                          getScheduleEventStatus(event, today, currentTime.getHours() * 60 + currentTime.getMinutes()),
+                        )
+
+                        if (statuses.includes('Прошло')) {
+                          return <Tag className="subject-assessment-status is-passed">Предмет сдан</Tag>
+                        }
+                        if (statuses.includes('Сейчас идет')) {
+                          return <Tag className="subject-assessment-status is-current" color="green">Идет аттестация</Tag>
+                        }
+                        return null
+                      })()}
                     </div>
 
                     <div className="subject-facts">
@@ -2222,9 +2261,15 @@ function App() {
                                 today={today}
                               />
                               <div className="subject-schedule-list">
-                                {selectedSubjectEvents.map((event) => (
+                                {selectedSubjectEvents.map((event) => {
+                                  const status = getScheduleEventStatus(
+                                    event,
+                                    today,
+                                    currentTime.getHours() * 60 + currentTime.getMinutes(),
+                                  )
+                                  return (
                                   <article
-                                    className="subject-schedule-event"
+                                    className={`subject-schedule-event${status === 'Прошло' ? ' is-past' : ''}${status === 'Сейчас идет' ? ' is-current' : ''}`}
                                     key={`${event.date}-${event.time}-${event.kind}`}
                                   >
                                     <div className="subject-event-meta">
@@ -2239,6 +2284,23 @@ function App() {
                                       </Tag>
                                     </div>
                                     <Text strong>{event.time}</Text>
+                                    {status && (
+                                      <Tag
+                                        color={
+                                          status === 'Сейчас идет'
+                                            ? 'green'
+                                            : status === 'Прошло'
+                                              ? 'default'
+                                              : 'blue'
+                                        }
+                                      >
+                                        {status === 'Прошло' && event.kind === 'Экзамен'
+                                          ? 'Экзамен сдан'
+                                          : status === 'Прошло' && event.kind === 'Зачет'
+                                            ? 'Зачет сдан'
+                                            : status}
+                                      </Tag>
+                                    )}
                                     {event.scheduleChange && (
                                       <Tag color="volcano">
                                         {getScheduleChangeNotice(
@@ -2258,7 +2320,8 @@ function App() {
                                       </div>
                                     )}
                                   </article>
-                                ))}
+                                  )
+                                })}
                               </div>
                             </div>
                           </>
