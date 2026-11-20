@@ -97,10 +97,14 @@ function getScheduleChangeNotice(
   location?: string,
 ) {
   if (!scheduleChange) return undefined
-  if ('previousTime' in scheduleChange) {
-    return `Перенос времени: было ${scheduleChange.previousTime}, теперь ${time}`
+  const notices: string[] = []
+  if (scheduleChange.previousTime) {
+    notices.push(`Перенос времени: было ${scheduleChange.previousTime}, теперь ${time}`)
   }
-  return `Изменение аудитории: была ${scheduleChange.previousLocation}, теперь ${location ?? 'не указана'}`
+  if (scheduleChange.previousLocation) {
+    notices.push(`Изменение аудитории: была ${scheduleChange.previousLocation}, теперь ${location ?? 'не указана'}`)
+  }
+  return notices.join('; ')
 }
 
 function getScheduleSubjectSlug(subject: string) {
@@ -524,14 +528,14 @@ async function downloadWeekPdf(
                     { text: 'Аудитория', style: 'tableHeader' },
                   ],
                   ...dayEvents.map((event) => [
-                    event.scheduleChange && 'previousTime' in event.scheduleChange
+                    event.scheduleChange?.previousTime
                       ? `${event.time} (перенос, было ${event.scheduleChange.previousTime})`
                       : event.time,
                     event.kind,
                     event.subject,
                     event.group,
                     event.instructor,
-                    event.scheduleChange && 'previousLocation' in event.scheduleChange
+                    event.scheduleChange?.previousLocation
                       ? `${event.location ?? ''} (изменение, была ${event.scheduleChange.previousLocation})`
                       : event.location ?? '',
                   ]),
