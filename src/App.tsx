@@ -1351,6 +1351,21 @@ function App() {
           />
         )}
 
+        {!isSubjectPath && !isSchedulePath && selectedGroup !== 'ХОЗ' && (
+          <Alert
+            className="family-law-exam-alert"
+            type="error"
+            showIcon
+            message="ИЗМЕНЕНИЕ ВРЕМЕНИ ЭКЗАМЕНА · 25 НОЯБРЯ 2026"
+            description={(
+              <span>
+                <strong>Семейное право, группа СПСД: начало в 08:30 вместо 09:30.</strong>
+                {' '}Аудитория 607.
+              </span>
+            )}
+          />
+        )}
+
         {!isSubjectPath && !isSchedulePath && (
           <section aria-labelledby="today-brief-title" className="today-brief">
             <div className="today-brief-heading">

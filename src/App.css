@@ -75,6 +75,26 @@
   font-size: 13px;
 }
 
+.family-law-exam-alert {
+  margin: 20px 0 28px;
+  border: 2px solid #a61d24;
+  border-radius: 12px;
+  box-shadow: 0 5px 18px rgb(166 29 36 / 18%);
+}
+
+.family-law-exam-alert .ant-alert-message {
+  color: #8f151b;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.family-law-exam-alert .ant-alert-description {
+  color: #541417;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
 .hero-dot,
 .footer-mark {
   width: 8px;
