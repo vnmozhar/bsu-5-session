@@ -423,6 +423,7 @@ function WeekCalendar({
                           event.kind,
                           event.subject,
                           event.group,
+                          event.location ? `Ауд. ${event.location}` : undefined,
                           getScheduleChangeNotice(
                             event.scheduleChange,
                             event.time,
@@ -434,6 +435,11 @@ function WeekCalendar({
                         <Text className="weekly-event-subject">{event.subject}</Text>
                         <Text className="weekly-event-kind">{event.kind}</Text>
                         <Text className="weekly-event-group">{event.group}</Text>
+                        {event.location && (
+                          <Text className="weekly-event-location">
+                            Ауд. {event.location}
+                          </Text>
+                        )}
                         {event.scheduleChange && (
                           <Text className="weekly-event-change">
                             {getScheduleChangeNotice(

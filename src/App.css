@@ -1607,7 +1607,8 @@ button.calendar-day {
 }
 
 .weekly-event-kind,
-.weekly-event-group {
+.weekly-event-group,
+.weekly-event-location {
   color: var(--color-text-secondary) !important;
 }
 
