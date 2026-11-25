@@ -1059,6 +1059,19 @@ function App() {
     }
   }
   const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes()
+  const agrarianExamEvent = officialSchedule.find(
+    (event) => event.subject === 'Аграрное право' && event.kind === 'Экзамен' && event.group.startsWith('СПС'),
+  )
+  const agrarianConsultationEvent = officialSchedule.find(
+    (event) => event.subject === 'Аграрное право' && event.kind === 'Консультация' && event.group.startsWith('СПС'),
+  )
+  const agrarianConsultationNoticeIsVisible = Boolean(
+    agrarianExamEvent &&
+    agrarianConsultationEvent &&
+    (today < agrarianExamEvent.date ||
+      (today === agrarianExamEvent.date &&
+        currentMinutes < (getTimeValues(agrarianExamEvent.time)[0] ?? 0))),
+  )
   const todayOfficialEvents = visibleOfficialSchedule
     .filter((event) => event.date === today)
     .sort((first, second) => {
@@ -1405,6 +1418,17 @@ function App() {
             selectedGroup={selectedGroup}
           />
         )}
+
+        {!isSubjectPath && !isSchedulePath && selectedGroup !== 'ХОЗ' &&
+          agrarianConsultationNoticeIsVisible && agrarianExamEvent && agrarianConsultationEvent && (
+            <Alert
+              className="agrarian-consultation-alert"
+              showIcon
+              type="info"
+              title="Консультация перед экзаменом по аграрному праву"
+              description={`Консультация начнется ${formatScheduleDate(agrarianConsultationEvent.date)} в ${agrarianConsultationEvent.time.split('-')[0]}${agrarianConsultationEvent.location ? ` в аудитории ${agrarianConsultationEvent.location}` : ''} и без перерыва перейдет в экзамен в ${agrarianExamEvent.time}${agrarianExamEvent.location ? ` в том же кабинете ${agrarianExamEvent.location}` : ''}.`}
+            />
+          )}
 
         {!isSubjectPath && !isSchedulePath && (
           <section aria-labelledby="today-brief-title" className="today-brief">
