@@ -88,6 +88,11 @@ interface TodayAgendaItem {
   instructor: string
   detail: string
   status: string | null
+  progress?: {
+    percent: number
+    elapsed: number
+    remaining: number
+  }
   changeNotice?: string
 }
 
@@ -192,6 +197,27 @@ function getTimeValues(time: string) {
   return Array.from(time.matchAll(/\b(\d{1,2})[:.](\d{2})\b/g), (match) =>
     Number(match[1]) * 60 + Number(match[2]),
   )
+}
+
+function getEventProgress(time: string, currentMinutes: number) {
+  const [start, end] = getTimeValues(time)
+  if (start === undefined || end === undefined || end <= start) return undefined
+
+  const duration = end - start
+  const elapsed = Math.max(0, Math.min(duration, currentMinutes - start))
+  return {
+    percent: Math.round((elapsed / duration) * 100),
+    elapsed,
+    remaining: duration - elapsed,
+  }
+}
+
+function formatDuration(minutes: number) {
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+  if (hours && remainingMinutes) return `${hours} ч ${remainingMinutes} мин`
+  if (hours) return `${hours} ч`
+  return `${remainingMinutes} мин`
 }
 
 function getTodayEventStatus(time: string, currentMinutes: number) {
@@ -1054,6 +1080,7 @@ function App() {
         instructor: event.instructor,
         detail: '',
         status: getTodayEventStatus(event.time, currentMinutes),
+        progress: getEventProgress(event.time, currentMinutes),
         changeNotice: getScheduleChangeNotice(
           event.scheduleChange,
           event.time,
@@ -1443,6 +1470,33 @@ function App() {
                               .filter(Boolean)
                               .join(' · ')}
                           </Text>
+                        )}
+                        {event.status === 'Сейчас идет' && event.progress && (
+                          <div className="today-event-progress">
+                            <div className="today-event-progress-heading">
+                              <Text strong>Прогресс занятия</Text>
+                              <Text className="today-event-progress-percent">
+                                {event.progress.percent}%
+                              </Text>
+                            </div>
+                            <div
+                              aria-label={`Прогресс занятия «${event.subject}»`}
+                              aria-valuemax={100}
+                              aria-valuemin={0}
+                              aria-valuenow={event.progress.percent}
+                              className="today-event-progress-track"
+                              role="progressbar"
+                            >
+                              <span
+                                className="today-event-progress-fill"
+                                style={{ width: `${event.progress.percent}%` }}
+                              />
+                            </div>
+                            <div className="today-event-progress-times">
+                              <Text>Прошло {formatDuration(event.progress.elapsed)}</Text>
+                              <Text>Осталось {formatDuration(event.progress.remaining)}</Text>
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>

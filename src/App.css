@@ -260,6 +260,58 @@
   font-size: 10px;
 }
 
+.today-event-progress {
+  display: grid;
+  gap: 7px;
+  margin-top: 8px;
+  padding: 11px 13px;
+  border: 1px solid rgb(22 130 138 / 18%);
+  border-radius: 10px;
+  background: linear-gradient(110deg, rgb(22 130 138 / 9%), rgb(22 130 138 / 3%));
+}
+
+.today-event-progress-heading,
+.today-event-progress-times {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.today-event-progress-heading .ant-typography {
+  color: var(--color-primary-900);
+  font-size: 11px;
+}
+
+.today-event-progress-percent {
+  color: #126c70 !important;
+  font-size: 13px !important;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.today-event-progress-track {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(22 130 138 / 15%);
+}
+
+.today-event-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #167a7d, #48b7a8);
+  box-shadow: 0 1px 5px rgb(22 130 138 / 28%);
+  transition: width 500ms ease;
+}
+
+.today-event-progress-times .ant-typography {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
 .schedule-change-notice {
   color: #a63d16 !important;
   font-size: 12px;
