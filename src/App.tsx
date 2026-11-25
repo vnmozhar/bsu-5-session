@@ -48,14 +48,6 @@ import {
 } from './data/officialSchedule'
 import './App.css'
 
-const familyLawExamEvent = officialSchedule.find(
-  (event) =>
-    event.date === '2026-11-25' &&
-    event.kind === 'Экзамен' &&
-    event.subject === 'Семейное право' &&
-    event.group.startsWith('СПС'),
-)
-
 const { Paragraph, Text, Title } = Typography
 const weekdayLabels = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
 const scheduleDayStart = 8 * 60
@@ -1362,25 +1354,6 @@ function App() {
           <ScheduleGroupSelector
             onChange={handleGroupChange}
             selectedGroup={selectedGroup}
-          />
-        )}
-
-        {!isSubjectPath && !isSchedulePath && selectedGroup !== 'ХОЗ' && familyLawExamEvent?.scheduleChange && (
-          <Alert
-            className="family-law-exam-alert"
-            type="error"
-            showIcon
-            title={`ИЗМЕНЕНИЕ РАСПИСАНИЯ · ${formatScheduleDate(familyLawExamEvent.date).toLocaleUpperCase('ru-RU')}`}
-            description={(
-              <span>
-                <strong>{familyLawExamEvent.subject}, {familyLawExamEvent.group}.</strong>
-                {' '}{getScheduleChangeNotice(
-                  familyLawExamEvent.scheduleChange,
-                  familyLawExamEvent.time,
-                  familyLawExamEvent.location,
-                )}.
-              </span>
-            )}
           />
         )}
 
