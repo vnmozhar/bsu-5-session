@@ -50,8 +50,6 @@ import './App.css'
 
 const { Paragraph, Text, Title } = Typography
 const weekdayLabels = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
-// Сданы по пользовательской заметке в HANDOFF.md: зачеты 19 и 20 ноября 2026.
-const archivedSubjectIds = new Set(['forensics', 'intellectual-property'])
 const scheduleDayStart = 8 * 60
 const scheduleDayEnd = 22 * 60
 const scheduleSlotMinutes = 30
@@ -141,6 +139,14 @@ function isScheduleEventVisible(group: string | undefined, selectedGroup: StudyG
     : ['ХОЗ', 'ХОЗЯЙСТВЕННОЕ ПРАВО']
 
   return groupAliases.some((alias) => normalizedGroup.includes(alias))
+}
+
+function getSubjectAssessmentEvents(subject: Pick<PublicSubject, 'id' | 'name'>, selectedGroup: StudyGroup) {
+  return officialSchedule.filter((event) =>
+    (event.subjectId === subject.id || event.subject === subject.name) &&
+    (event.kind === 'Экзамен' || event.kind === 'Зачет') &&
+    isScheduleEventVisible(event.group, selectedGroup),
+  )
 }
 
 const publicSubjectNames = new Set(publicSubjects.map((subject) => subject.name))
@@ -1298,12 +1304,20 @@ function App() {
       ),
     [normalizedQuery, subjectsForSelectedGroup],
   )
+  const isAssessmentComplete = (subject: PublicSubject) => {
+    const events = getSubjectAssessmentEvents(subject, selectedGroup)
+    return events.length > 0 && events.every((event) =>
+      getScheduleEventStatus(
+        event,
+        today,
+        currentTime.getHours() * 60 + currentTime.getMinutes(),
+      ) === 'Прошло',
+    )
+  }
+  const archivedSubjects = subjectsForSelectedGroup.filter(isAssessmentComplete)
   const activeSubjects = isSubjectPath
     ? filteredSubjects
-    : filteredSubjects.filter((subject) => !archivedSubjectIds.has(subject.id))
-  const archivedSubjects = publicSubjects.filter((subject) =>
-    archivedSubjectIds.has(subject.id),
-  )
+    : filteredSubjects.filter((subject) => !isAssessmentComplete(subject))
 
   return (
     <ConfigProvider
@@ -2030,32 +2044,36 @@ function App() {
                     <div className="assessment-info">
                       <Tag
                         color={
-                          subject.assessment.type === 'Экзамен'
+                          getSubjectAssessmentEvents(subject, selectedGroup).length === 0
+                            ? 'default'
+                            : subject.assessment.type === 'Экзамен'
                             ? 'blue'
                             : subject.assessment.type === 'Зачет'
                               ? 'green'
                               : 'default'
                         }
                       >
-                        {subject.assessment.type}
+                        {getSubjectAssessmentEvents(subject, selectedGroup).length === 0
+                          ? 'Начитка'
+                          : subject.assessment.type}
                       </Tag>
-                      <Text>{subject.assessment.format}</Text>
+                      {getSubjectAssessmentEvents(subject, selectedGroup).length > 0 && (
+                        <Text>{subject.assessment.format}</Text>
+                      )}
                       {(() => {
-                        const assessmentEvents = officialSchedule.filter((event) =>
-                          (event.subjectId === subject.id ||
-                            (!event.subjectId && event.subject === subject.name)) &&
-                          (event.kind === 'Экзамен' || event.kind === 'Зачет') &&
-                          isScheduleEventVisible(event.group, selectedGroup),
-                        )
+                        const assessmentEvents = getSubjectAssessmentEvents(subject, selectedGroup)
                         const statuses = assessmentEvents.map((event) =>
                           getScheduleEventStatus(event, today, currentTime.getHours() * 60 + currentTime.getMinutes()),
                         )
 
-                        if (statuses.includes('Прошло')) {
-                          return <Tag className="subject-assessment-status is-passed">Предмет сдан</Tag>
+                        if (assessmentEvents.length === 0) {
+                          return <Text className="next-session-control-note">Тип контроля будет определен в следующей сессии.</Text>
                         }
                         if (statuses.includes('Сейчас идет')) {
                           return <Tag className="subject-assessment-status is-current" color="green">Идет аттестация</Tag>
+                        }
+                        if (statuses.includes('Прошло')) {
+                          return <Tag className="subject-assessment-status is-passed">Аттестация завершена</Tag>
                         }
                         return null
                       })()}
@@ -2462,7 +2480,7 @@ function App() {
                   <Text className="section-kicker">ЗАВЕРШЕННЫЕ ПРЕДМЕТЫ</Text>
                   <Title id="subject-archive-title" level={2}>Архив</Title>
                   <Text type="secondary">
-                    Сданные предметы собраны по курсу и сессии.
+                    Аттестации, завершившиеся по расписанию, собраны по курсу и сессии.
                   </Text>
                 </div>
               </div>
@@ -2476,23 +2494,25 @@ function App() {
                     <summary>7-я сессия · 16 ноября - 5 декабря 2026</summary>
                     <Row gutter={[16, 16]} className="archive-subject-grid">
                       {archivedSubjects.map((subject) => {
-                        const assessmentEvent = officialSchedule.find((event) =>
-                          (event.subjectId === subject.id || event.subject === subject.name) &&
-                          (event.kind === 'Экзамен' || event.kind === 'Зачет'),
-                        )
+                        const assessmentEvents = getSubjectAssessmentEvents(subject, selectedGroup)
                         return (
                           <Col key={subject.id} xs={24} sm={12} xl={8}>
                             <Card className="archive-subject-card" variant="borderless">
                               <div className="archive-subject-status">
                                 <CheckCircleFilled />
-                                <span>Сдано</span>
+                                <span>Завершено по расписанию</span>
                               </div>
                               <Title level={4}>{subject.name}</Title>
-                              <Text type="secondary">
-                                {assessmentEvent
-                                  ? `${assessmentEvent.kind} · ${formatScheduleDate(assessmentEvent.date)}`
-                                  : 'Аттестация сдана в этой сессии'}
-                              </Text>
+                              <div className="archive-assessment-types">
+                                {assessmentEvents.map((event) => (
+                                  <Tag
+                                    color={event.kind === 'Экзамен' ? 'blue' : 'green'}
+                                    key={`${event.date}-${event.kind}-${event.group}`}
+                                  >
+                                    {event.kind} · {formatScheduleDate(event.date)}
+                                  </Tag>
+                                ))}
+                              </div>
                               <a className="subject-page-link" href={`/subjects/${subject.id}`}>
                                 Открыть карточку предмета <ArrowRightOutlined />
                               </a>
