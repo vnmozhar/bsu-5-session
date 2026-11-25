@@ -1630,6 +1630,95 @@ button.calendar-day {
   padding: 48px 0 28px;
 }
 
+.subject-archive {
+  margin-top: 52px;
+  padding: 28px;
+  border: 1px solid var(--color-border);
+  border-top: 4px solid var(--color-primary-700);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f1f5fa 0%, #f8fafc 100%);
+}
+
+.subject-archive-heading {
+  margin-bottom: 20px;
+}
+
+.subject-archive-heading h2.ant-typography {
+  margin: 4px 0 6px;
+}
+
+.archive-course,
+.archive-session {
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.archive-course > summary,
+.archive-session > summary {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-weight: 700;
+  list-style-position: inside;
+}
+
+.archive-course > summary .ant-typography {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.archive-course-content {
+  padding: 0 16px 16px;
+}
+
+.archive-session {
+  background: #f8fafc;
+}
+
+.archive-subject-grid {
+  padding: 16px 4px 4px;
+}
+
+.archive-subject-card.ant-card {
+  height: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  box-shadow: none;
+}
+
+.archive-subject-card .ant-card-body {
+  display: flex;
+  min-height: 168px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px;
+}
+
+.archive-subject-card h4.ant-typography {
+  margin: 0;
+}
+
+.archive-subject-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #23764c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.archive-subject-card .subject-page-link {
+  margin-top: auto;
+  padding-top: 6px;
+}
+
 .subject-page-heading {
   display: grid;
   justify-items: start;

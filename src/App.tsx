@@ -50,6 +50,8 @@ import './App.css'
 
 const { Paragraph, Text, Title } = Typography
 const weekdayLabels = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
+// Сданы по пользовательской заметке в HANDOFF.md: зачеты 19 и 20 ноября 2026.
+const archivedSubjectIds = new Set(['forensics', 'intellectual-property'])
 const scheduleDayStart = 8 * 60
 const scheduleDayEnd = 22 * 60
 const scheduleSlotMinutes = 30
@@ -1296,6 +1298,12 @@ function App() {
       ),
     [normalizedQuery, subjectsForSelectedGroup],
   )
+  const activeSubjects = isSubjectPath
+    ? filteredSubjects
+    : filteredSubjects.filter((subject) => !archivedSubjectIds.has(subject.id))
+  const archivedSubjects = publicSubjects.filter((subject) =>
+    archivedSubjectIds.has(subject.id),
+  )
 
   return (
     <ConfigProvider
@@ -1982,7 +1990,7 @@ function App() {
                     Учебные предметы
                   </Title>
                   <Text type="secondary">
-                    {subjectsForSelectedGroup.length} дисциплин
+                    {activeSubjects.length} дисциплин
                   </Text>
                 </div>
                 <Input
@@ -2000,9 +2008,9 @@ function App() {
 
           {isSubjectPath && !selectedSubject && !selectedScheduleSubjectName ? (
             <Empty description="Проверьте ссылку на предмет" />
-          ) : (selectedSubject ? [selectedSubject] : filteredSubjects).length > 0 ? (
+          ) : (selectedSubject ? [selectedSubject] : activeSubjects).length > 0 ? (
             <Row gutter={[20, 20]} align="stretch">
-              {(selectedSubject ? [selectedSubject] : filteredSubjects).map((subject) => (
+              {(selectedSubject ? [selectedSubject] : activeSubjects).map((subject) => (
                 <Col key={subject.id} xs={24} sm={selectedSubject ? 24 : 12} xl={selectedSubject ? 24 : 8}>
                   <Card
                     className={`subject-card${selectedSubject ? ' subject-detail-card' : ''}`}
@@ -2446,6 +2454,57 @@ function App() {
               className="empty-search"
               description="По вашему запросу ничего не найдено"
             />
+          )}
+          {!isSubjectPath && !isSchedulePath && (
+            <section className="subject-archive" aria-labelledby="subject-archive-title">
+              <div className="subject-archive-heading">
+                <div>
+                  <Text className="section-kicker">ЗАВЕРШЕННЫЕ ПРЕДМЕТЫ</Text>
+                  <Title id="subject-archive-title" level={2}>Архив</Title>
+                  <Text type="secondary">
+                    Сданные предметы собраны по курсу и сессии.
+                  </Text>
+                </div>
+              </div>
+              <details className="archive-course">
+                <summary>
+                  <span>4-й курс</span>
+                  <Text type="secondary">{archivedSubjects.length} предмета в архиве</Text>
+                </summary>
+                <div className="archive-course-content">
+                  <details className="archive-session">
+                    <summary>7-я сессия · 16 ноября - 5 декабря 2026</summary>
+                    <Row gutter={[16, 16]} className="archive-subject-grid">
+                      {archivedSubjects.map((subject) => {
+                        const assessmentEvent = officialSchedule.find((event) =>
+                          (event.subjectId === subject.id || event.subject === subject.name) &&
+                          (event.kind === 'Экзамен' || event.kind === 'Зачет'),
+                        )
+                        return (
+                          <Col key={subject.id} xs={24} sm={12} xl={8}>
+                            <Card className="archive-subject-card" variant="borderless">
+                              <div className="archive-subject-status">
+                                <CheckCircleFilled />
+                                <span>Сдано</span>
+                              </div>
+                              <Title level={4}>{subject.name}</Title>
+                              <Text type="secondary">
+                                {assessmentEvent
+                                  ? `${assessmentEvent.kind} · ${formatScheduleDate(assessmentEvent.date)}`
+                                  : 'Аттестация сдана в этой сессии'}
+                              </Text>
+                              <a className="subject-page-link" href={`/subjects/${subject.id}`}>
+                                Открыть карточку предмета <ArrowRightOutlined />
+                              </a>
+                            </Card>
+                          </Col>
+                        )
+                      })}
+                    </Row>
+                  </details>
+                </div>
+              </details>
+            </section>
           )}
         </section>}
 
