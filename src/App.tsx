@@ -92,6 +92,10 @@ interface TodayAgendaItem {
     percent: number
     elapsed: number
     remaining: number
+    mood: {
+      emoji: string
+      label: string
+    }
   }
   changeNotice?: string
 }
@@ -199,16 +203,26 @@ function getTimeValues(time: string) {
   )
 }
 
+function getEventProgressMood(percent: number) {
+  if (percent < 20) return { emoji: '😭', label: 'Занятие только началось' }
+  if (percent < 40) return { emoji: '😢', label: 'Начало занятия' }
+  if (percent < 60) return { emoji: '😐', label: 'Середина занятия' }
+  if (percent < 80) return { emoji: '🙂', label: 'Занятие подходит к концу' }
+  return { emoji: '😁', label: 'Занятие почти завершено' }
+}
+
 function getEventProgress(time: string, currentMinutes: number) {
   const [start, end] = getTimeValues(time)
   if (start === undefined || end === undefined || end <= start) return undefined
 
   const duration = end - start
   const elapsed = Math.max(0, Math.min(duration, currentMinutes - start))
+  const percent = Math.round((elapsed / duration) * 100)
   return {
-    percent: Math.round((elapsed / duration) * 100),
+    percent,
     elapsed,
     remaining: duration - elapsed,
+    mood: getEventProgressMood(percent),
   }
 }
 
@@ -1498,7 +1512,16 @@ function App() {
                         {event.status === 'Сейчас идет' && event.progress && (
                           <div className="today-event-progress">
                             <div className="today-event-progress-heading">
-                              <Text strong>Прогресс занятия</Text>
+                              <div className="today-event-progress-mood">
+                                <Text strong>Прогресс занятия</Text>
+                                <span
+                                  aria-label={event.progress.mood.label}
+                                  className="today-event-progress-emoji"
+                                  role="img"
+                                >
+                                  {event.progress.mood.emoji}
+                                </span>
+                              </div>
                               <Text className="today-event-progress-percent">
                                 {event.progress.percent}%
                               </Text>

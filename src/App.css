@@ -283,6 +283,17 @@
   font-size: 11px;
 }
 
+.today-event-progress-mood {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.today-event-progress-emoji {
+  font-size: 21px;
+  line-height: 1;
+}
+
 .today-event-progress-percent {
   color: #126c70 !important;
   font-size: 13px !important;
