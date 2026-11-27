@@ -46,6 +46,7 @@ import {
   officialSchedule,
   type OfficialScheduleEntry,
 } from './data/officialSchedule'
+import { isScheduleEventVisible, type StudyGroup } from './data/scheduleVisibility'
 import './App.css'
 
 const { Paragraph, Text, Title } = Typography
@@ -56,8 +57,6 @@ const scheduleSlotMinutes = 30
 const minimumEventDisplayMinutes = 60
 const changedEventDisplayMinutes = 90
 const familyLawMarkNoticeExpiresAt = Date.parse('2026-11-27T16:30:00+03:00')
-type StudyGroup = 'ОБЩ' | 'СПС' | 'ХОЗ'
-
 interface CalendarEvent {
   date: string
   kind: string
@@ -136,19 +135,6 @@ function isGoogleDriveUrl(value: string) {
   } catch {
     return false
   }
-}
-
-function isScheduleEventVisible(group: string | undefined, selectedGroup: StudyGroup) {
-  if (selectedGroup === 'ОБЩ') return true
-
-  const normalizedGroup = (group ?? '').trim().toLocaleUpperCase('ru')
-  if (!normalizedGroup || normalizedGroup.includes('ОБЩ')) return true
-
-  const groupAliases = selectedGroup === 'СПС'
-    ? ['СПС', 'СУДЕБНО-ПРОКУРОРСКО-СЛЕДСТВЕННАЯ ДЕЯТЕЛЬНОСТЬ']
-    : ['ХОЗ', 'ХОЗЯЙСТВЕННОЕ ПРАВО']
-
-  return groupAliases.some((alias) => normalizedGroup.includes(alias))
 }
 
 function getSubjectAssessmentEvents(subject: Pick<PublicSubject, 'id' | 'name'>, selectedGroup: StudyGroup) {
