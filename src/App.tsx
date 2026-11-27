@@ -55,6 +55,7 @@ const scheduleDayEnd = 22 * 60
 const scheduleSlotMinutes = 30
 const minimumEventDisplayMinutes = 60
 const changedEventDisplayMinutes = 90
+const familyLawMarkNoticeExpiresAt = Date.parse('2026-11-27T16:30:00+03:00')
 type StudyGroup = 'ОБЩ' | 'СПС' | 'ХОЗ'
 
 interface CalendarEvent {
@@ -918,6 +919,20 @@ function App() {
     const timerId = window.setInterval(() => setCurrentTime(new Date()), 60_000)
     return () => window.clearInterval(timerId)
   }, [])
+  useEffect(() => {
+    const expiryTimerId = window.setTimeout(
+      () => setCurrentTime(new Date()),
+      Math.max(0, familyLawMarkNoticeExpiresAt - Date.now()),
+    )
+    const refreshTimeWhenVisible = () => {
+      if (document.visibilityState === 'visible') setCurrentTime(new Date())
+    }
+    document.addEventListener('visibilitychange', refreshTimeWhenVisible)
+    return () => {
+      window.clearTimeout(expiryTimerId)
+      document.removeEventListener('visibilitychange', refreshTimeWhenVisible)
+    }
+  }, [])
   const today = toLocalISODate(currentTime)
   const todayLabel = currentTime.toLocaleDateString('ru-RU', {
     weekday: 'long',
@@ -1426,6 +1441,16 @@ function App() {
           </div>
         </section>}
 
+        {currentPath === '/' &&
+          currentTime.getTime() < familyLawMarkNoticeExpiresAt && (
+            <Alert
+              className="family-law-mark-notice"
+              message="За отметку на экзамене семейное право необходимо расписаться в 15:30 в 213 кабинет"
+              showIcon
+              type="warning"
+            />
+          )}
+
         {!isSubjectPath && !isSchedulePath && (
           <ScheduleGroupSelector
             onChange={handleGroupChange}
@@ -1883,6 +1908,18 @@ function App() {
                     <Text>15-27 февраля 2027</Text>
                   </div>
                 </div>
+                <Alert
+                  className="practice-diary-callout"
+                  message="Дневник практики"
+                  description={
+                    <>
+                      <strong>Дневник_бакалавриат_и_магистратура_НОВЫЙ_ВАРИАНТ_2026.doc</strong>
+                      {' '}является дневником практики. Печатать на A4 в существующем размере документа, не уменьшать масштаб. Бумажную копию можно получить лично в деканате, кабинет 401.
+                    </>
+                  }
+                  showIcon
+                  type="info"
+                />
                 <div className="practice-shared-info">
                   <div className="practice-requirement-block">
                     <Tag color="gold">Документы подать до 4 декабря 2026</Tag>

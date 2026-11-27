@@ -95,6 +95,44 @@
   line-height: 1.5;
 }
 
+.family-law-mark-notice {
+  margin: 20px 0 16px;
+  padding: 18px 22px;
+  border: 2px solid #a61d24;
+  border-radius: 12px;
+  background: #fff1f0;
+  box-shadow: 0 5px 18px rgb(166 29 36 / 20%);
+}
+
+.family-law-mark-notice .ant-alert-message {
+  color: #8f151b;
+  font-size: clamp(17px, 2.2vw, 22px);
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.practice-diary-callout {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border: 2px solid var(--color-primary-500);
+  border-radius: 12px;
+  background: var(--color-primary-100);
+  box-shadow: 0 4px 14px rgb(20 78 157 / 12%);
+}
+
+.practice-diary-callout .ant-alert-message {
+  color: var(--color-primary-900);
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.practice-diary-callout .ant-alert-description {
+  color: var(--color-text-primary);
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
 .hero-dot,
 .footer-mark {
   width: 8px;
